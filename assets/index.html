@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="./favicon.png" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>House of Midas Luxe | Exquisite High Jewelry</title>
+    <meta name="description" content="Discover the pinnacle of high jewelry at House of Midas Luxe. Immersive 3D product showcases, heritage craftsmanship, and exceptional gemstones." />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600;700&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400;1,500&family=Great+Vibes&family=Jost:wght@300;400;500&family=Playfair+Display:ital,wght@0,400;0,500;0,700;1,400;1,700&family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap" rel="stylesheet">
+    <script>
+      (function () {
+        if (location.pathname.endsWith('/landing-preloader.html')) return;
+        var params = new URLSearchParams(location.search);
+        if (params.get('preloader_done') === '1') {
+          params.delete('preloader_done');
+          var next = location.pathname + (params.toString() ? ('?' + params.toString()) : '') + location.hash;
+          history.replaceState(null, '', next);
+          return;
+        }
+        location.replace('/landing-preloader.html');
+      })();
+    </script>
+    <script type="module" crossorigin src="./index.js"></script>
+    <link rel="stylesheet" crossorigin href="./index.css">
+  </head>
+  <body>
+    <div id="root"></div>
+  </body>
+</html>
+

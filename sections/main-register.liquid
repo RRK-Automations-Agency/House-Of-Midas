@@ -1,0 +1,96 @@
+<div class="customer-register py-20 px-6 md:px-10" data-section-id="{{ section.id }}" data-section-type="register">
+  <div class="max-w-[500px] mx-auto">
+    <div class="bg-white/40 backdrop-blur-xl rounded-3xl p-8 md:p-12 border border-secondary/20 shadow-2xl shadow-secondary/5">
+      <div class="text-center mb-10">
+        <h1 class="font-playfair-display text-4xl font-bold text-[#1a0509] mb-4">Maison Registry</h1>
+        <p class="font-jost text-sm tracking-[0.2em] uppercase text-secondary/70 italic">Join our circle of elegance</p>
+      </div>
+
+      {%- form 'create_customer' -%}
+        {%- if form.errors -%}
+          <div class="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg text-sm mb-6 font-jost">
+            {{ form.errors | default_errors }}
+          </div>
+        {%- endif -%}
+
+        <div class="space-y-6">
+          <div class="grid grid-cols-2 gap-4">
+            <div class="field group">
+              <label for="RegisterFirstName" class="block font-jost text-[10px] uppercase tracking-[0.3em] text-secondary/60 mb-2 pl-1">First Name</label>
+              <input
+                type="text"
+                name="customer[first_name]"
+                id="RegisterFirstName"
+                {% if form.first_name %}value="{{ form.first_name }}"{% endif %}
+                autocomplete="given-name"
+                class="w-full bg-white/50 border border-secondary/20 rounded-xl px-4 py-4 font-jost text-sm focus:outline-none focus:border-secondary transition-all group-hover:bg-white"
+                placeholder="Jean"
+              >
+            </div>
+            <div class="field group">
+              <label for="RegisterLastName" class="block font-jost text-[10px] uppercase tracking-[0.3em] text-secondary/60 mb-2 pl-1">Last Name</label>
+              <input
+                type="text"
+                name="customer[last_name]"
+                id="RegisterLastName"
+                {% if form.last_name %}value="{{ form.last_name }}"{% endif %}
+                autocomplete="family-name"
+                class="w-full bg-white/50 border border-secondary/20 rounded-xl px-4 py-4 font-jost text-sm focus:outline-none focus:border-secondary transition-all group-hover:bg-white"
+                placeholder="Midas"
+              >
+            </div>
+          </div>
+
+          <div class="field group">
+            <label for="RegisterEmail" class="block font-jost text-[10px] uppercase tracking-[0.3em] text-secondary/60 mb-2 pl-1">Email Affinity</label>
+            <input
+              type="email"
+              name="customer[email]"
+              id="RegisterEmail"
+              {% if form.email %}value="{{ form.email }}"{% endif %}
+              autocomplete="email"
+              class="w-full bg-white/50 border border-secondary/20 rounded-xl px-4 py-4 font-jost text-sm focus:outline-none focus:border-secondary transition-all group-hover:bg-white"
+              placeholder="votre@email.com"
+              required
+            >
+          </div>
+
+          <div class="field group">
+            <label for="RegisterPassword" class="block font-jost text-[10px] uppercase tracking-[0.3em] text-secondary/60 mb-2 pl-1">New Secret</label>
+            <input
+              type="password"
+              name="customer[password]"
+              id="RegisterPassword"
+              autocomplete="new-password"
+              class="w-full bg-white/50 border border-secondary/20 rounded-xl px-4 py-4 font-jost text-sm focus:outline-none focus:border-secondary transition-all group-hover:bg-white"
+              placeholder="••••••••"
+              required
+            >
+          </div>
+
+          <p class="text-[10px] text-secondary/50 font-jost italic text-center px-4">
+            By creating an account, you agree to our terms of elegance and privacy collection.
+          </p>
+
+          <button class="w-full bg-[#1a0509] text-white font-jost py-5 rounded-full text-xs uppercase tracking-[0.4em] font-bold transition-all duration-300 hover:bg-secondary hover:translate-y-[-2px] shadow-lg">
+            Create Profile
+          </button>
+        </div>
+
+        <div class="mt-10 text-center border-t border-secondary/10 pt-8">
+          <p class="font-jost text-xs text-secondary/60 mb-4 italic">Already part of the House?</p>
+          <a href="{{ routes.account_login_url }}" class="font-jost text-[11px] uppercase tracking-[0.3em] text-[#1a0509] font-bold hover:text-secondary transition-colors">
+            Sign In Instead
+          </a>
+        </div>
+      {%- endform -%}
+    </div>
+  </div>
+</div>
+
+{% schema %}
+{
+  "name": "Customer Register",
+  "settings": []
+}
+{% endschema %}

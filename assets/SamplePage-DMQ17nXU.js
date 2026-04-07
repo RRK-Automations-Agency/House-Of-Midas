@@ -1,0 +1,1 @@
+import{D as e,R as t,a as n}from"./index.js";var r=t(e(),1);function i(){return(0,r.jsxs)(r.Fragment,{children:[(0,r.jsx)(n,{title:`Home`,description:`Home Page Introduction`}),(0,r.jsx)(`div`,{children:(0,r.jsx)(`h3`,{children:`This is a sample page`})})]})}export{i as default};

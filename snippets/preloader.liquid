@@ -1,0 +1,92 @@
+<div id="hom-preloader-shell" aria-hidden="true">
+  <iframe id="hom-preloader-frame" title="Loading" src="{{ 'preloader-frame.html' | asset_url }}" loading="eager"></iframe>
+</div>
+
+<script>
+  (function () {
+    var nav = (performance && performance.getEntriesByType)
+      ? performance.getEntriesByType('navigation')[0]
+      : null;
+    var navType = nav && nav.type ? nav.type : 'navigate';
+    var isReload = navType === 'reload';
+
+    var sameOriginReferrer = false;
+    try {
+      if (document.referrer) {
+        sameOriginReferrer = new URL(document.referrer).origin === location.origin;
+      }
+    } catch (e) {
+      sameOriginReferrer = false;
+    }
+
+    var isCartRoute = /^\/cart(\/|$|\?)/i.test(location.pathname + location.search);
+
+    // Show on hard reload or first/external entry.
+    // Skip on internal navigation and on cart pages.
+    var shouldShow = !isCartRoute && (isReload || !sameOriginReferrer);
+    if (!shouldShow) {
+      document.documentElement.classList.add('hom-preloader-skip');
+    }
+  })();
+</script>
+
+<style>
+  #hom-preloader-shell {
+    position: fixed;
+    inset: 0;
+    z-index: 99999;
+    background: #000;
+    pointer-events: auto;
+    will-change: opacity;
+    animation: homPreloaderFadeOut 1.2s ease 4.58s forwards;
+  }
+
+  #hom-preloader-frame {
+    width: 100%;
+    height: 100%;
+    border: 0;
+    display: block;
+    background: #000;
+  }
+
+  #root {
+    position: relative;
+    z-index: 1;
+    opacity: 0;
+    will-change: opacity;
+    animation: homSiteFadeIn .72s ease 3.58s forwards;
+  }
+
+  html.hom-preloader-skip #hom-preloader-shell {
+    display: none !important;
+  }
+
+  html.hom-preloader-skip #root {
+    opacity: 1 !important;
+    animation: none !important;
+    transform: none !important;
+  }
+
+  @keyframes homPreloaderFadeOut {
+    0% {
+      opacity: 1;
+      visibility: visible;
+      pointer-events: auto;
+    }
+    100% {
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+    }
+  }
+
+  @keyframes homSiteFadeIn {
+    0% {
+      opacity: 0;
+    }
+    100% {
+      opacity: 1;
+      transform: none;
+    }
+  }
+</style>

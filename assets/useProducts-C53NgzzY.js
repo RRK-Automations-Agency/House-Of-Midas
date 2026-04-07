@@ -1,0 +1,1 @@
+import{P as e,R as t}from"./index.js";import{i as n}from"./Layout-avvYffrc.js";var r=t(e(),1);function i(){let[e,t]=(0,r.useState)([]),[i,a]=(0,r.useState)(!0),[o,s]=(0,r.useState)(null);return(0,r.useEffect)(()=>{async function e(){try{t(await n())}catch{s(`Failed to load products`)}finally{a(!1)}}e()},[]),{products:e,loading:i,error:o}}export{i as t};

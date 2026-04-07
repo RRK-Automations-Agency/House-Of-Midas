@@ -1,0 +1,1 @@
+import{j as e,P as s}from"./index.js";function a(){return e.jsxs(e.Fragment,{children:[e.jsx(s,{title:"Home",description:"Home Page Introduction"}),e.jsx("div",{children:e.jsx("h3",{children:"This is a sample page"})})]})}export{a as default};

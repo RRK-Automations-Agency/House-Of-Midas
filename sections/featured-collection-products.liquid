@@ -1,0 +1,362 @@
+<section class="featured-collection-products section-{{ section.id }}">
+  <div class="page-width featured-collection-products__wrap">
+    {% if section.settings.heading != blank %}
+      <div class="featured-collection-products__header">
+        {% if section.settings.overline != blank %}
+          <p class="featured-collection-products__overline">{{ section.settings.overline }}</p>
+        {% endif %}
+        <h2 class="featured-collection-products__title">{{ section.settings.heading }}</h2>
+        {% if section.settings.subheading != blank %}
+          <p class="featured-collection-products__subheading">{{ section.settings.subheading }}</p>
+        {% endif %}
+      </div>
+    {% endif %}
+
+    {% if section.settings.mode == 'manual' %}
+      <div class="featured-collection-products__grid">
+        {% for block in section.blocks limit: section.settings.product_limit %}
+          {% assign product = all_products[block.settings.product] %}
+          {% if product != nil %}
+            <div class="featured-collection-products__card">
+              <a href="{{ product.url }}">
+                {% assign front_flip_image = blank %}
+                {% assign back_flip_image = blank %}
+
+                {% if block.settings.image != blank %}
+                  {% assign front_flip_image = block.settings.image %}
+                {% elsif product.featured_image != blank %}
+                  {% assign front_flip_image = product.featured_image %}
+                {% elsif product.images and product.images.size > 0 %}
+                  {% assign front_flip_image = product.images.first %}
+                {% endif %}
+
+                {% if product.images and product.images.size > 1 %}
+                  {% for image_item in product.images %}
+                    {% if front_flip_image == blank or image_item.src != front_flip_image.src %}
+                      {% assign back_flip_image = image_item %}
+                      {% break %}
+                    {% endif %}
+                  {% endfor %}
+                {% endif %}
+
+                {% if back_flip_image == blank and front_flip_image != blank %}
+                  {% assign back_flip_image = front_flip_image %}
+                {% endif %}
+
+                {% if front_flip_image != blank %}
+                  <div class="featured-collection-products__flip">
+                    <div class="featured-collection-products__flip-inner">
+                      <div class="featured-collection-products__flip-face featured-collection-products__flip-face--front">
+                        {{ front_flip_image | image_url: width: 900 | image_tag: class: 'featured-collection-products__image', loading: 'lazy', alt: product.title }}
+                      </div>
+                      <div class="featured-collection-products__flip-face featured-collection-products__flip-face--back">
+                        {{ back_flip_image | image_url: width: 900 | image_tag: class: 'featured-collection-products__image', loading: 'lazy', alt: product.title }}
+                      </div>
+                    </div>
+                  </div>
+                {% endif %}
+                <div class="featured-collection-products__meta">
+                  <h3 class="featured-collection-products__product-title">{{ product.title }}</h3>
+                  {% if product.price %}
+                    <p class="featured-collection-products__price">{{ product.price | money }}</p>
+                  {% endif %}
+                </div>
+              </a>
+            </div>
+          {% endif %}
+        {% endfor %}
+      </div>
+    {% elsif section.settings.mode == 'auto' %}
+      <div class="featured-collection-products__grid">
+        {% assign found = 0 %}
+        {% for product in collections['all'].products %}
+          {% assign loc = product.metafields.custom.featured_location %}
+          {% if loc == 'collection' or loc == 'both' %}
+            <div class="featured-collection-products__card">
+              <a href="{{ product.url }}">
+                {% assign front_flip_image = blank %}
+                {% assign back_flip_image = blank %}
+
+                {% if product.featured_image != blank %}
+                  {% assign front_flip_image = product.featured_image %}
+                {% elsif product.images and product.images.size > 0 %}
+                  {% assign front_flip_image = product.images.first %}
+                {% endif %}
+
+                {% if product.images and product.images.size > 1 %}
+                  {% for image_item in product.images %}
+                    {% if front_flip_image == blank or image_item.src != front_flip_image.src %}
+                      {% assign back_flip_image = image_item %}
+                      {% break %}
+                    {% endif %}
+                  {% endfor %}
+                {% endif %}
+
+                {% if back_flip_image == blank and front_flip_image != blank %}
+                  {% assign back_flip_image = front_flip_image %}
+                {% endif %}
+
+                {% if front_flip_image != blank %}
+                  <div class="featured-collection-products__flip">
+                    <div class="featured-collection-products__flip-inner">
+                      <div class="featured-collection-products__flip-face featured-collection-products__flip-face--front">
+                        {{ front_flip_image | image_url: width: 900 | image_tag: class: 'featured-collection-products__image', loading: 'lazy', alt: product.title }}
+                      </div>
+                      <div class="featured-collection-products__flip-face featured-collection-products__flip-face--back">
+                        {{ back_flip_image | image_url: width: 900 | image_tag: class: 'featured-collection-products__image', loading: 'lazy', alt: product.title }}
+                      </div>
+                    </div>
+                  </div>
+                {% endif %}
+                <div class="featured-collection-products__meta">
+                  <h3 class="featured-collection-products__product-title">{{ product.title }}</h3>
+                  {% if product.price %}
+                    <p class="featured-collection-products__price">{{ product.price | money }}</p>
+                  {% endif %}
+                </div>
+              </a>
+            </div>
+            {% assign found = found | plus: 1 %}
+            {% if found >= section.settings.product_limit %}
+              {% break %}
+            {% endif %}
+          {% endif %}
+        {% endfor %}
+      </div>
+    {% else %}
+      {% assign collection_to_use = section.settings.collection %}
+      {% if collection_to_use != blank %}
+        <div class="featured-collection-products__grid">
+          {% for product in collection_to_use.products limit: section.settings.product_limit %}
+          <div class="featured-collection-products__card">
+            <a href="{{ product.url }}">
+              {% assign front_flip_image = blank %}
+              {% assign back_flip_image = blank %}
+
+              {% if product.featured_image != blank %}
+                {% assign front_flip_image = product.featured_image %}
+              {% elsif product.images and product.images.size > 0 %}
+                {% assign front_flip_image = product.images.first %}
+              {% endif %}
+
+              {% if product.images and product.images.size > 1 %}
+                {% for image_item in product.images %}
+                  {% if front_flip_image == blank or image_item.src != front_flip_image.src %}
+                    {% assign back_flip_image = image_item %}
+                    {% break %}
+                  {% endif %}
+                {% endfor %}
+              {% endif %}
+
+              {% if back_flip_image == blank and front_flip_image != blank %}
+                {% assign back_flip_image = front_flip_image %}
+              {% endif %}
+
+              {% if front_flip_image != blank %}
+                <div class="featured-collection-products__flip">
+                  <div class="featured-collection-products__flip-inner">
+                    <div class="featured-collection-products__flip-face featured-collection-products__flip-face--front">
+                      {{ front_flip_image | image_url: width: 900 | image_tag: class: 'featured-collection-products__image', loading: 'lazy', alt: product.title }}
+                    </div>
+                    <div class="featured-collection-products__flip-face featured-collection-products__flip-face--back">
+                      {{ back_flip_image | image_url: width: 900 | image_tag: class: 'featured-collection-products__image', loading: 'lazy', alt: product.title }}
+                    </div>
+                  </div>
+                </div>
+              {% endif %}
+              <div class="featured-collection-products__meta">
+                <h3 class="featured-collection-products__product-title">{{ product.title }}</h3>
+                {% if product.price %}
+                  <p class="featured-collection-products__price">{{ product.price | money }}</p>
+                {% endif %}
+              </div>
+            </a>
+          </div>
+        {% endfor %}
+      </div>
+      {% else %}
+        <div class="featured-collection-products__empty">
+          <strong>Choose a collection</strong>
+          <span>Select a collection in the theme editor to display featured products here.</span>
+        </div>
+      {% endif %}
+    {% endif %}
+  </div>
+</section>
+
+{% schema %}
+{
+  "name": "Featured collection",
+  "settings": [
+    { "type": "select", "id": "mode", "label": "Display mode", "default": "collection", "options": [ { "value": "collection", "label": "Use collection" }, { "value": "manual", "label": "Manually select products" }, { "value": "auto", "label": "Auto (use product metafield)" } ] },
+    { "type": "text", "id": "overline", "label": "Overline", "default": "Curated selection" },
+    { "type": "text", "id": "heading", "label": "Section heading", "default": "Featured Collection" },
+    { "type": "textarea", "id": "subheading", "label": "Section description", "default": "Highlight a hand-picked set of products from any collection you choose." },
+    { "type": "collection", "id": "collection", "label": "Collection to feature" },
+    { "type": "range", "id": "product_limit", "label": "Number of products", "min": 1, "max": 12, "step": 1, "default": 4 }
+  ],
+  "blocks": [
+    {
+      "type": "product",
+      "name": "Product",
+      "settings": [
+        { "type": "product", "id": "product", "label": "Product" },
+        { "type": "image_picker", "id": "image", "label": "Optional image override" }
+      ]
+    }
+  ],
+  "presets": [
+    { "name": "Featured collection products" }
+  ]
+}
+{% endschema %}
+
+<style>
+  .featured-collection-products { padding: 4rem 0; }
+  .featured-collection-products__wrap { display: grid; gap: 2rem; }
+  .featured-collection-products__header { text-align: center; max-width: 58rem; margin: 0 auto; }
+  .featured-collection-products__overline {
+    margin: 0 0 .75rem;
+    text-transform: uppercase;
+    letter-spacing: .35em;
+    font-size: .75rem;
+    opacity: .7;
+  }
+  .featured-collection-products__title { margin: 0; font-size: clamp(2rem, 4vw, 3.5rem); }
+  .featured-collection-products__subheading { margin: .75rem auto 0; max-width: 44rem; line-height: 1.7; opacity: .75; }
+  .featured-collection-products__grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 1.5rem;
+  }
+  .featured-collection-products__card {
+    background: #fff;
+    border: 1px solid rgba(0,0,0,.06);
+    border-radius: 1.25rem;
+    overflow: hidden;
+    box-shadow: 0 12px 30px rgba(0,0,0,.05);
+    transition: transform .25s ease, box-shadow .25s ease;
+    perspective: 1200px;
+    cursor: pointer;
+  }
+  .featured-collection-products__card:hover { transform: translateY(-4px); box-shadow: 0 18px 40px rgba(0,0,0,.08); }
+  .featured-collection-products__card a { color: inherit; text-decoration: none; display: block; }
+  .featured-collection-products__flip {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 4 / 5;
+    overflow: hidden;
+  }
+  .featured-collection-products__flip-inner {
+    position: absolute;
+    inset: 0;
+    transform-style: preserve-3d;
+    transition: transform .55s cubic-bezier(.25,.46,.45,.94);
+  }
+  .featured-collection-products__card:hover .featured-collection-products__flip-inner,
+  .featured-collection-products__card:focus-within .featured-collection-products__flip-inner {
+    transform: rotateY(180deg);
+  }
+  .featured-collection-products__card.is-flipped .featured-collection-products__flip-inner {
+    transform: rotateY(180deg);
+  }
+  .featured-collection-products__flip-face {
+    position: absolute;
+    inset: 0;
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+  }
+  .featured-collection-products__flip-face--back {
+    transform: rotateY(180deg);
+  }
+  .featured-collection-products__image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+  }
+  .featured-collection-products__meta { padding: 1rem 1rem 1.25rem; }
+  .featured-collection-products__product-title { margin: 0; font-size: 1.05rem; line-height: 1.35; }
+  .featured-collection-products__price { margin: .35rem 0 0; opacity: .72; }
+  .featured-collection-products__empty {
+    padding: 2rem;
+    border: 1px dashed rgba(0,0,0,.16);
+    border-radius: 1rem;
+    text-align: center;
+    display: grid;
+    gap: .35rem;
+    justify-items: center;
+    opacity: .8;
+  }
+  .featured-collection-products__empty strong { font-size: 1rem; text-transform: uppercase; letter-spacing: .2em; }
+  .featured-collection-products__empty span { max-width: 36rem; line-height: 1.6; }
+
+  @media (hover: none) {
+    .featured-collection-products__card:hover .featured-collection-products__flip-inner {
+      transform: none;
+    }
+  }
+</style>
+
+<script>
+(() => {
+  const root = document.querySelector('.section-{{ section.id }}');
+  if (!root) return;
+
+  const cards = root.querySelectorAll('.featured-collection-products__card');
+  if (!cards.length) return;
+
+  const isTouchDevice =
+    (typeof window !== 'undefined' && window.matchMedia && window.matchMedia('(hover: none)').matches) ||
+    ('ontouchstart' in window);
+
+  cards.forEach((card) => {
+    let flipTimer = null;
+
+    const clearFlipTimer = () => {
+      if (!flipTimer) return;
+      clearTimeout(flipTimer);
+      flipTimer = null;
+    };
+
+    const setFlipped = () => {
+      clearFlipTimer();
+      card.classList.add('is-flipped');
+    };
+
+    const unsetFlipped = () => {
+      clearFlipTimer();
+      card.classList.remove('is-flipped');
+    };
+
+    card.addEventListener('mouseenter', setFlipped);
+    card.addEventListener('mouseleave', unsetFlipped);
+    card.addEventListener('focusin', setFlipped);
+    card.addEventListener('focusout', unsetFlipped);
+
+    if (!isTouchDevice) return;
+
+    const link = card.querySelector('a');
+    if (!link) return;
+
+    // First tap flips the card, second tap follows the link.
+    link.addEventListener('click', (event) => {
+      if (!card.classList.contains('is-flipped')) {
+        event.preventDefault();
+        setFlipped();
+        flipTimer = window.setTimeout(unsetFlipped, 1200);
+        return;
+      }
+
+      unsetFlipped();
+    }, { passive: false });
+
+    card.addEventListener('touchstart', () => {
+      setFlipped();
+      flipTimer = window.setTimeout(unsetFlipped, 1200);
+    }, { passive: true });
+  });
+})();
+</script>

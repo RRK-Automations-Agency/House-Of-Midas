@@ -1,0 +1,56 @@
+[
+  {
+    "name": "Theme Settings",
+    "settings": [
+      {
+        "type": "image_picker",
+        "id": "favicon",
+        "label": "Favicon"
+      }
+      ,
+      {
+        "type": "collection",
+        "id": "featured_collection",
+        "label": "Featured collection",
+        "info": "Select the collection whose colours should be used as the site theme defaults"
+      }
+      ,
+      {
+        "type": "checkbox",
+        "id": "show_rings",
+        "label": "Show Rings in Collections menu",
+        "default": true
+      },
+      {
+        "type": "checkbox",
+        "id": "show_earrings",
+        "label": "Show Earrings in Collections menu",
+        "default": false
+      },
+      {
+        "type": "checkbox",
+        "id": "show_necklaces",
+        "label": "Show Necklaces in Collections menu",
+        "default": false
+      },
+      {
+        "type": "checkbox",
+        "id": "show_bangles",
+        "label": "Show Bangles in Collections menu",
+        "default": false
+      },
+      {
+        "type": "checkbox",
+        "id": "show_bracelets",
+        "label": "Show Bracelets in Collections menu",
+        "default": false
+      },
+      {
+        "type": "checkbox",
+        "id": "show_luxe",
+        "label": "Show Luxe Series in Collections menu",
+        "default": false
+      }
+    ]
+  }
+]

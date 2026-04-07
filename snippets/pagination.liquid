@@ -1,0 +1,48 @@
+{% comment %}
+  Generic pagination snippet.
+  Usage: {% render 'pagination', paginate: paginate %}
+{% endcomment %}
+
+{% if paginate.pages > 1 %}
+  <nav class="pagination" role="navigation" aria-label="Pagination">
+    <ul class="flex flex-wrap items-center justify-center gap-2">
+      {% if paginate.previous %}
+        <li>
+          <a href="{{ paginate.previous.url }}" class="inline-flex h-10 min-w-10 items-center justify-center rounded-full border border-secondary/30 px-4 text-[11px] uppercase tracking-[0.2em] text-[#1a0509] transition-colors hover:bg-[#1a0509] hover:text-white">
+            Prev
+          </a>
+        </li>
+      {% endif %}
+
+      {% for part in paginate.parts %}
+        {% if part.is_link %}
+          <li>
+            <a href="{{ part.url }}" class="inline-flex h-10 min-w-10 items-center justify-center rounded-full border border-secondary/20 px-4 text-sm text-[#1a0509] transition-colors hover:bg-secondary/10">
+              {{ part.title }}
+            </a>
+          </li>
+        {% else %}
+          <li>
+            {% if part.title == paginate.current_page %}
+              <span class="inline-flex h-10 min-w-10 items-center justify-center rounded-full bg-[#1a0509] px-4 text-sm text-white">
+                {{ part.title }}
+              </span>
+            {% else %}
+              <span class="inline-flex h-10 min-w-10 items-center justify-center rounded-full border border-secondary/15 px-4 text-sm text-secondary/60">
+                {{ part.title }}
+              </span>
+            {% endif %}
+          </li>
+        {% endif %}
+      {% endfor %}
+
+      {% if paginate.next %}
+        <li>
+          <a href="{{ paginate.next.url }}" class="inline-flex h-10 min-w-10 items-center justify-center rounded-full border border-secondary/30 px-4 text-[11px] uppercase tracking-[0.2em] text-[#1a0509] transition-colors hover:bg-[#1a0509] hover:text-white">
+            Next
+          </a>
+        </li>
+      {% endif %}
+    </ul>
+  </nav>
+{% endif %}

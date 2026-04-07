@@ -1,0 +1,169 @@
+/* stylelint-disable */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --radius: 0rem;
+    --background: 0 56% 97%; /* Soft Ivory #FBF1F1 */
+    /* Midas gold - central variable for inline styles and gradients */
+    --midas-gold: #BF9340; /* Tailwind gold-500 */
+    --midas-gold-rgb: 191 147 64;
+    --foreground: 0 0% 5%; /* Velvet Black #0D0D0D */
+    --card: 0 56% 97%;
+    --card-foreground: 0 0% 5%;
+    --popover: 0 56% 97%;
+    --popover-foreground: 0 0% 5%;
+    --primary: 352 56% 28%; /* Royal Maroon #6E1F2A */
+    --primary-foreground: 0 56% 97%;
+    --secondary: 43 48% 57%; /* Antique Gold #C6A75E */
+    --secondary-foreground: 0 0% 5%;
+    --muted: 0 56% 97%;
+    --muted-foreground: 352 56% 28%;
+    --accent: 43 48% 57%;
+    --accent-foreground: 0 0% 5%;
+    --destructive: 352 56% 28%;
+    --destructive-foreground: 0 56% 97%;
+    --border: 43 48% 57%;
+    --input: 43 48% 57%;
+    --ring: 352 56% 28%;
+    --chart-1: 352 56% 28%;
+    --chart-2: 43 48% 57%;
+    --chart-3: 0 0% 5%;
+    --chart-4: 0 56% 97%;
+    --chart-5: 43 48% 57%;
+    --sidebar-background: 0 56% 97%;
+    --sidebar-foreground: 0 0% 5%;
+    --sidebar-primary: 352 56% 28%;
+    --sidebar-primary-foreground: 0 56% 97%;
+    --sidebar-accent: 43 48% 57%;
+    --sidebar-accent-foreground: 0 0% 5%;
+    --sidebar-border: 43 48% 57%;
+    --sidebar-ring: 352 56% 28%;
+  }
+
+  .dark {
+    --background: 0 56% 97%;
+    --foreground: 0 0% 5%;
+    --card: 0 56% 97%;
+    --card-foreground: 0 0% 5%;
+    --popover: 0 56% 97%;
+    --popover-foreground: 0 0% 5%;
+    --primary: 352 56% 28%;
+    --primary-foreground: 0 56% 97%;
+    --secondary: 43 48% 57%;
+    --secondary-foreground: 0 0% 5%;
+    --muted: 0 56% 97%;
+    --muted-foreground: 352 56% 28%;
+    --accent: 43 48% 57%;
+    --accent-foreground: 0 0% 5%;
+    --destructive: 352 56% 28%;
+    --destructive-foreground: 0 56% 97%;
+    --border: 43 48% 57%;
+    --input: 43 48% 57%;
+    --ring: 352 56% 28%;
+    --sidebar-background: 0 56% 97%;
+    --sidebar-foreground: 0 0% 5%;
+    --sidebar-primary: 352 56% 28%;
+    --sidebar-primary-foreground: 0 56% 97%;
+    --sidebar-accent: 43 48% 57%;
+    --sidebar-accent-foreground: 0 0% 5%;
+    --sidebar-border: 43 48% 57%;
+    --sidebar-ring: 352 56% 28%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply text-foreground font-inter;
+    background-color: #fdf8f2;
+    background-image:
+      radial-gradient(circle at 12% 8%, rgba(198, 167, 94, 0.16) 0%, transparent 36%),
+      radial-gradient(circle at 88% 92%, rgba(110, 31, 42, 0.09) 0%, transparent 38%),
+      linear-gradient(180deg, #fdf8f2 0%, #f5ead8 100%);
+    scroll-behavior: smooth;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    @apply font-playfair-display;
+    letter-spacing: 0.02em;
+  }
+
+  /* Mobile typographic tuning: reduce minimum sizes on very small viewports
+     to prevent headings from overpowering the layout and improve legibility. */
+  @media (max-width: 420px) {
+    html { font-size: 14px; }
+
+    h1 { font-size: clamp(28px, 8vw, 56px); }
+    h2 { font-size: clamp(18px, 5.5vw, 30px); }
+    h3 { font-size: clamp(16px, 4.5vw, 22px); }
+
+    /* utility classes for components to use when they want toned-down sizes */
+    .text-responsive-lg { font-size: clamp(18px, 4.2vw, 22px); }
+    .text-responsive-md { font-size: clamp(14px, 3.6vw, 16px); }
+    .text-responsive-sm { font-size: clamp(12px, 3.2vw, 14px); }
+  }
+}
+
+@layer utilities {
+  .gradient-text {
+    background: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--accent)));
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    color: transparent;
+  }
+
+  .luxury-border {
+    border: 1px solid hsla(var(--secondary), 0.7);
+    box-shadow: 0 0 0 1px hsla(var(--secondary), 0.25) inset, 0 8px 28px hsla(var(--foreground), 0.08);
+  }
+
+  .midas-panel {
+    background: linear-gradient(180deg, hsla(var(--background), 0.98) 0%, hsla(var(--background), 0.92) 100%);
+    border: 1px solid hsla(var(--secondary), 0.45);
+  }
+
+  .midas-dark-panel {
+    background: linear-gradient(145deg, hsla(var(--foreground), 1) 0%, hsla(var(--primary), 0.65) 100%);
+    border: 1px solid hsla(var(--secondary), 0.45);
+  }
+
+  .font-playfair-display {
+    font-family: "Playfair Display", serif;
+  }
+
+  .font-jost {
+    font-family: "Jost", sans-serif;
+  }
+}
+
+/* Global scrollbar hiding */
+* {
+  scrollbar-width: none !important; /* Firefox */
+  -ms-overflow-style: none !important; /* IE/Edge */
+}
+
+*::-webkit-scrollbar {
+  display: none !important; /* Chrome/Safari */
+}
+
+/* Specific class utility if needed */
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+.hide-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}

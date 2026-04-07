@@ -1,0 +1,232 @@
+<div class="wishlist-container py-12 md:py-20" data-section-id="{{ section.id }}" data-section-type="wishlist">
+  <div class="max-w-[1400px] mx-auto px-6 md:px-10">
+    <div class="flex flex-col md:flex-row justify-between items-end mb-12 border-b border-secondary/20 pb-8">
+      <div>
+        <h1 class="font-playfair-display text-4xl md:text-5xl font-bold text-[#1a0509] mb-4">Your Desires</h1>
+        <p class="font-jost text-sm tracking-[0.2em] uppercase text-secondary/80">A curated treasury of your most coveted pieces</p>
+      </div>
+      <a href="{{ routes.collections_url }}" class="font-jost text-[12px] uppercase tracking-[0.2em] text-[#1a0509] hover:text-secondary transition-colors mt-6 md:mt-0">
+        Discover More
+      </a>
+    </div>
+
+    <!-- Wishlist Grid -->
+    <div id="wishlist-grid" class="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 md:gap-8 min-h-[400px]">
+      <!-- JS will hydrate this -->
+      <div class="col-span-full flex flex-col items-center justify-center py-20 opacity-0 transition-opacity duration-500" id="wishlist-loading">
+        <div class="w-12 h-12 border-4 border-secondary/20 border-t-secondary rounded-full animate-spin mb-4"></div>
+        <p class="font-playfair-display italic text-secondary/60">Recalling your treasures...</p>
+      </div>
+    </div>
+
+    <!-- Empty State (Hidden initially) -->
+    <div id="wishlist-empty" class="hidden text-center py-32 bg-white/30 backdrop-blur-sm rounded-3xl border border-secondary/10 border-dashed">
+      <div class="w-20 h-20 bg-secondary/10 rounded-full flex items-center justify-center mx-auto mb-8">
+        <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="text-secondary"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg>
+      </div>
+      <h2 class="font-playfair-display text-3xl font-bold text-[#1a0509] mb-4">Your treasury is empty</h2>
+      <p class="font-jost text-secondary/70 mb-10 max-w-md mx-auto">The path to elegance begins with a single choice. Explore our collections and save the pieces that speak to your soul.</p>
+      <a href="{{ routes.collections_url }}" class="inline-block bg-[#1a0509] text-white font-jost px-10 py-5 rounded-full text-xs uppercase tracking-[0.3em] font-bold transition-all duration-300 hover:bg-secondary hover:translate-y-[-2px]">
+        Begin Exploration
+      </a>
+    </div>
+  </div>
+
+  <script>
+    (function() {
+      async function initWishlist() {
+        const grid = document.getElementById('wishlist-grid');
+        const emptyState = document.getElementById('wishlist-empty');
+        const loader = document.getElementById('wishlist-loading');
+        
+        if (!grid || !emptyState || !loader) return;
+        
+        const LOCAL_KEY = 'hom-wishlist';
+        
+        function getWishlist() {
+          const saved = localStorage.getItem(LOCAL_KEY);
+          if (!saved) return [];
+          try {
+            const parsed = JSON.parse(saved);
+            return Array.isArray(parsed) ? parsed : [];
+          } catch (e) { return []; }
+        }
+
+        function updateWishlist(items) {
+          localStorage.setItem(LOCAL_KEY, JSON.stringify(items));
+          window.dispatchEvent(new Event('wishlist-updated'));
+        }
+
+        async function fetchProduct(item) {
+          const handle = (typeof item === 'string') ? item : (item.handle || null);
+          if (!handle) return null;
+          try {
+            const res = await fetch(`/products/${handle}.js`);
+            if (!res.ok) return null;
+            return await res.json();
+          } catch (e) { return null; }
+        }
+
+        const wishlist = getWishlist();
+        
+        if (wishlist.length === 0) {
+          loader.classList.add('hidden');
+          grid.classList.add('hidden');
+          emptyState.classList.remove('hidden');
+          return;
+        }
+
+        loader.classList.add('opacity-100');
+
+        const products = await Promise.all(
+          wishlist.map(async (item) => fetchProduct(item))
+        );
+
+        const validProducts = products.filter(p => p !== null);
+
+        if (validProducts.length === 0) {
+          loader.classList.add('hidden');
+          grid.classList.add('hidden');
+          emptyState.classList.remove('hidden');
+          return;
+        }
+
+        // Clear only product cards, preserving loader/empty state if they are separate
+        // Actually, easiest to just clear everything and re-append loader if needed
+        // but since we hide the loader after loop, we just clear the grid here.
+        Array.from(grid.children).forEach(child => {
+          if (child.id !== 'wishlist-loading') child.remove();
+        });
+
+        loader.classList.add('hidden');
+        emptyState.classList.add('hidden');
+        grid.classList.remove('hidden');
+        
+        function safeText(value) {
+          return String(value || '');
+        }
+
+        function safeHref(value) {
+          try {
+            const url = new URL(String(value || ''), window.location.origin);
+            if (url.protocol === 'http:' || url.protocol === 'https:') return url.href;
+            return '/collections';
+          } catch (_) {
+            return '/collections';
+          }
+        }
+
+        function safeImage(value) {
+          try {
+            const url = new URL(String(value || ''), window.location.origin);
+            if (url.protocol === 'http:' || url.protocol === 'https:') return url.href;
+            return '';
+          } catch (_) {
+            return '';
+          }
+        }
+
+        validProducts.forEach(product => {
+          const card = document.createElement('div');
+          card.className = 'w-full relative group cursor-pointer';
+
+          const price = (Number(product.price || 0) / 100).toLocaleString('en-GB', {
+            style: 'currency',
+            currency: 'GBP',
+            maximumFractionDigits: 0
+          });
+
+          const mediaWrap = document.createElement('div');
+          mediaWrap.className = 'relative w-full aspect-[4/5] rounded-xl overflow-hidden bg-[#ede8e0] mb-4';
+
+          const link = document.createElement('a');
+          link.href = safeHref(product.url);
+
+          const image = document.createElement('img');
+          image.src = safeImage(product.featured_image);
+          image.alt = safeText(product.title);
+          image.className = 'w-full h-full object-cover transition-transform duration-500 group-hover:scale-105';
+
+          link.appendChild(image);
+          mediaWrap.appendChild(link);
+
+          const removeBtn = document.createElement('button');
+          removeBtn.type = 'button';
+          removeBtn.className = 'remove-wishlist absolute top-3 right-3 w-9 h-9 rounded-full bg-[#5c0d1a] text-white flex items-center justify-center shadow-lg transition-all hover:scale-110 active:scale-95';
+          removeBtn.dataset.handle = safeText(product.handle);
+
+          const icon = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+          icon.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
+          icon.setAttribute('width', '18');
+          icon.setAttribute('height', '18');
+          icon.setAttribute('viewBox', '0 0 24 24');
+          icon.setAttribute('fill', 'currentColor');
+          icon.setAttribute('stroke', 'currentColor');
+          icon.setAttribute('stroke-width', '2');
+          icon.setAttribute('stroke-linecap', 'round');
+          icon.setAttribute('stroke-linejoin', 'round');
+
+          const iconPath = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+          iconPath.setAttribute('d', 'M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z');
+          icon.appendChild(iconPath);
+          removeBtn.appendChild(icon);
+
+          removeBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            const handle = this.dataset.handle;
+            const current = getWishlist();
+            const next = current.filter(item => {
+              const itemHandle = typeof item === 'string' ? item : item.handle;
+              return itemHandle !== handle;
+            });
+            updateWishlist(next);
+            card.remove();
+            if (next.length === 0) {
+              grid.classList.add('hidden');
+              emptyState.classList.remove('hidden');
+            }
+          });
+
+          mediaWrap.appendChild(removeBtn);
+
+          const content = document.createElement('div');
+          content.className = 'space-y-1 text-center';
+
+          const title = document.createElement('h3');
+          title.className = 'font-jost text-[11px] font-bold tracking-[0.15em] uppercase text-[#1a0509] truncate';
+          title.textContent = safeText(product.title);
+
+          const priceEl = document.createElement('p');
+          priceEl.className = 'font-jost text-[13px] text-secondary font-medium';
+          priceEl.textContent = price;
+
+          content.appendChild(title);
+          content.appendChild(priceEl);
+
+          card.appendChild(mediaWrap);
+          card.appendChild(content);
+          grid.appendChild(card);
+        });
+      }
+
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initWishlist);
+      } else {
+        initWishlist();
+      }
+      
+      // Listen for updates from React components (Navbar, Product Cards)
+      window.addEventListener('wishlist-updated', () => {
+        // Simple re-init. More complex logic could diff the DOM if needed.
+        initWishlist();
+      });
+    })();
+  </script>
+</div>
+
+{% schema %}
+{
+  "name": "Main Wishlist",
+  "settings": []
+}
+{% endschema %}

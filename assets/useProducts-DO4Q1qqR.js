@@ -1,0 +1,1 @@
+import{r as t}from"./index.js";import{h as d}from"./Layout-DtlIJb2H.js";function l(){const[o,s]=t.useState([]),[e,a]=t.useState(!0),[c,u]=t.useState(null);return t.useEffect(()=>{async function n(){try{const r=await d();s(r)}catch{u("Failed to load products")}finally{a(!1)}}n()},[]),{products:o,loading:e,error:c}}export{l as u};

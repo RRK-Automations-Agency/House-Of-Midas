@@ -1,0 +1,308 @@
+<!doctype html>
+<html class="no-js dark" lang="{{ request.locale.iso_code }}">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self' https: data: blob:; script-src 'self' 'unsafe-inline' 'unsafe-eval' https:; style-src 'self' 'unsafe-inline' https:; img-src 'self' data: blob: https:; font-src 'self' data: https:; connect-src 'self' https: wss:; object-src 'none'; base-uri 'self'; form-action 'self' https:; upgrade-insecure-requests">
+    <meta name="theme-color" content="">
+    <link rel="canonical" href="{{ canonical_url }}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400;1,500&family=Great+Vibes&family=Jost:wght@300;400;500&family=Playfair+Display:ital,wght@0,400;0,500;0,700;1,400;1,700&family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap" rel="stylesheet">
+
+    {%- if settings.favicon != blank -%}
+      <link rel="icon" type="image/png" href="{{ settings.favicon | image_url: width: 32, height: 32 }}">
+    {%- else -%}
+      <link rel="icon" type="image/x-icon" href="{{ 'favicon.ico' | asset_url }}">
+    {%- endif -%}
+
+    <title>{{ page_title }}</title>
+
+    {% if page_description %}
+      <meta name="description" content="{{ page_description | escape }}">
+    {% endif %}
+
+    <script>
+      window.ShopifyAssetUrl = "{{ 'index.js' | asset_url | split: 'index.js' | first }}";
+      window.ShopifyMenu = [
+        {% for link in linklists.main-menu.links %}
+          {
+            "title": "{{ link.title | escape }}",
+            "url": "{{ link.url }}",
+            "active": {{ link.active | json }}
+          }{% unless forloop.last %},{% endunless %}
+        {% endfor %}
+      ];
+    </script>
+    
+    {{ content_for_header }}
+    {% comment %} Inject Featured collection theme colours as CSS variables for the React app and Liquid sections.
+       - Looks for a collection with handle 'featured' (common convention). If not present, falls back to sensible defaults.
+       - The variables are hex values and are used by the small mapping below to override utility classes like .text-secondary/.bg-secondary
+    {% endcomment %}
+
+    {% if settings.featured_collection != blank %}
+      {% assign featured_collection = collections[settings.featured_collection] %}
+    {% else %}
+      {% assign featured_collection = collections['featured'] %}
+    {% endif %}
+    {% if featured_collection %}
+      {% assign fc_primary = featured_collection.metafields.theme.primary_color | default: '#d4a843' %}
+      {%- comment -%} Prefer the site's midas gold CSS variable when a secondary colour isn't provided in the collection meta {%- endcomment -%}
+      {% assign fc_secondary = featured_collection.metafields.theme.secondary_color | default: 'var(--midas-gold)' %}
+      {% assign fc_text = featured_collection.metafields.theme.text_color | default: '#1a0509' %}
+    {% else %}
+      {% assign fc_primary = '#d4a843' %}
+      {%- comment -%} fallback to the --midas-gold CSS variable so React/Tailwind utilities that map to .text-secondary/.bg-secondary
+         will use the intended gold tone instead of a pale cream when no collection override exists {%- endcomment -%}
+      {% assign fc_secondary = 'var(--midas-gold)' %}
+      {% assign fc_text = '#1a0509' %}
+    {% endif %}
+
+    <style id="shopify-brand-vars">
+      :root {
+        /* Brand variables (hex) derived from Featured collection or fallbacks */
+        --brand-primary: {{ fc_primary }};
+        --brand-secondary: {{ fc_secondary }};
+        --brand-text: {{ fc_text }};
+      }
+
+      /* Lightweight mapping to prefer the brand hex values for the main utility classes used across the app.
+         Using !important so Tailwind generated utility classes (which frequently rely on hsl(var(--secondary)) )
+         are visually overridden by the brand colours where a brand colour is provided. */
+      .text-secondary { color: var(--brand-secondary) !important; }
+      .text-primary { color: var(--brand-primary) !important; }
+      .text-secondary-foreground { color: var(--brand-text) !important; }
+
+      .bg-secondary { background-color: var(--brand-secondary) !important; }
+      .bg-primary { background-color: var(--brand-primary) !important; }
+
+      .border-secondary { border-color: var(--brand-secondary) !important; }
+      .border-primary { border-color: var(--brand-primary) !important; }
+
+      /* Icon fills / accents */
+      .fill-primary { fill: var(--brand-primary) !important; }
+      .stroke-primary { stroke: var(--brand-primary) !important; }
+
+      /* Small helpers */
+      .shadow-\\[0_8px_24px_hsla\(var\(--secondary\)\,0\.22\)\] { box-shadow: 0 8px 24px rgba(0,0,0,0.08), 0 10px 30px rgba(0,0,0,0.08) !important; }
+    </style>
+
+    <style id="shopify-navbar-stability-fix">
+      /* Shopify runtime safety net:
+         keep the React fixed header visible above app/section content on scroll.
+         Uses data attribute selector for reliability instead of class-based selectors. */
+      header[data-navbar="shopify-navbar"] {
+        position: fixed !important;
+        top: 0 !important;
+        left: 0 !important;
+        right: 0 !important;
+        z-index: 9999 !important;
+        opacity: 1 !important;
+        visibility: visible !important;
+        display: block !important;
+        pointer-events: auto !important;
+        transform: none !important;
+      }
+
+      header[data-navbar="shopify-navbar"] nav {
+        opacity: 1 !important;
+        visibility: visible !important;
+      }
+    </style>
+    <script>
+      (function () {
+        function pinNavbarVisibility() {
+          var header = document.querySelector('header[data-navbar="shopify-navbar"]');
+          if (!header) return;
+          
+          header.style.setProperty('position', 'fixed', 'important');
+          header.style.setProperty('top', '0px', 'important');
+          header.style.setProperty('left', '0px', 'important');
+          header.style.setProperty('right', '0px', 'important');
+          header.style.setProperty('z-index', '9999', 'important');
+          header.style.setProperty('opacity', '1', 'important');
+          header.style.setProperty('visibility', 'visible', 'important');
+          header.style.setProperty('display', 'block', 'important');
+          header.style.setProperty('pointer-events', 'auto', 'important');
+          header.style.setProperty('transform', 'none', 'important');
+
+          var nav = header.querySelector('nav');
+          if (nav) {
+            nav.style.setProperty('opacity', '1', 'important');
+            nav.style.setProperty('visibility', 'visible', 'important');
+          }
+        }
+
+        var raf = 0;
+        function schedulePin() {
+          if (raf) cancelAnimationFrame(raf);
+          raf = requestAnimationFrame(pinNavbarVisibility);
+        }
+
+        document.addEventListener('DOMContentLoaded', pinNavbarVisibility);
+        window.addEventListener('load', pinNavbarVisibility);
+        window.addEventListener('scroll', schedulePin, { passive: true });
+        window.addEventListener('resize', schedulePin, { passive: true });
+
+        var observer = new MutationObserver(schedulePin);
+        observer.observe(document.documentElement, {
+          childList: true,
+          subtree: true,
+          attributes: true,
+          attributeFilter: ['class', 'style']
+        });
+      })();
+    </script>
+
+    <script>
+      // Expose theme editor collection visibility flags to the client-side app
+      window.ShopifyThemeSettings = window.ShopifyThemeSettings || {};
+      window.ShopifyThemeSettings.collectionsVisibility = {
+        show_rings: {{ settings.show_rings | json }},
+        show_earrings: {{ settings.show_earrings | json }},
+        show_necklaces: {{ settings.show_necklaces | json }},
+        show_bangles: {{ settings.show_bangles | json }},
+        show_bracelets: {{ settings.show_bracelets | json }},
+        show_luxe: {{ settings.show_luxe | json }}
+      };
+    </script>
+
+    <script>
+      // Expose only minimal customer data needed by storefront UI.
+      window.__SHOPIFY_CUSTOMER__ = {% if customer %}{
+        "id": {{ customer.id | json }},
+        "firstName": {{ customer.first_name | json }}
+      }{% else %}null{% endif %};
+    </script>
+
+    <script>
+      // Optionally provide a configured wishlist API base via store metafield.
+      // Recommended value: your Shopify app-proxy prefix (example: /apps/hom-wishlist).
+      (function () {
+        var configuredBase = {{ shop.metafields.hom.wishlist_api_base.value | default: '' | json }};
+        if (typeof window.__WISHLIST_API_BASE__ !== 'string' || window.__WISHLIST_API_BASE__.length === 0) {
+          window.__WISHLIST_API_BASE__ = configuredBase;
+        }
+      })();
+    </script>
+
+    <script>
+      (function () {
+        function hasAnalyticsConsent() {
+          try {
+            if (window.__HOM_CONSENT__ && typeof window.__HOM_CONSENT__.analytics === 'boolean') {
+              return window.__HOM_CONSENT__.analytics;
+            }
+            var raw = window.localStorage.getItem('hom-consent-v1');
+            if (!raw) return false;
+            var parsed = JSON.parse(raw);
+            return Boolean(parsed && parsed.analytics === true);
+          } catch (_) {
+            return false;
+          }
+        }
+
+        function toAmount(value) {
+          if (value === null || value === undefined) return 0;
+          if (typeof value === 'number') {
+            if (!Number.isFinite(value)) return 0;
+            return Number.isInteger(value) ? value / 100 : value;
+          }
+          var str = String(value);
+          var numeric = Number(str.replace(/[^0-9.\-]+/g, ''));
+          if (!Number.isFinite(numeric)) return 0;
+          if (str.indexOf('.') >= 0) return numeric;
+          return Number.isInteger(numeric) ? numeric / 100 : numeric;
+        }
+
+        function emitPurchase(payload) {
+          if (!hasAnalyticsConsent()) return;
+
+          if (typeof window.gtag === 'function') {
+            window.gtag('event', 'purchase', payload);
+            return;
+          }
+
+          window.dataLayer = window.dataLayer || [];
+          window.dataLayer.push({
+            event: 'purchase',
+            ecommerce: payload,
+          });
+        }
+
+        function mapLineItems(items) {
+          if (!Array.isArray(items)) return [];
+          return items.map(function (item) {
+            return {
+              item_id: String(item.product_id || item.id || ''),
+              item_name: String(item.title || item.product_title || ''),
+              item_variant: String(item.variant_title || item.variant || ''),
+              quantity: Number(item.quantity || 1),
+              price: toAmount(item.price || item.final_price || 0),
+            };
+          });
+        }
+
+        function trackCheckoutPurchase() {
+          var checkout = window.Shopify && window.Shopify.checkout ? window.Shopify.checkout : null;
+          if (!checkout) return;
+
+          var transactionId = String(checkout.order_id || checkout.order_number || checkout.token || '');
+          if (!transactionId) return;
+
+          var dedupeKey = 'hom:purchase:' + transactionId;
+          try {
+            if (window.sessionStorage.getItem(dedupeKey) === '1') return;
+          } catch (_) {}
+
+          var payload = {
+            transaction_id: transactionId,
+            currency: String(checkout.currency || '{{ cart.currency.iso_code | default: shop.currency }}'),
+            value: toAmount(checkout.total_price || checkout.total_price_money || 0),
+            tax: toAmount(checkout.total_tax || 0),
+            shipping: toAmount(checkout.shipping_price || checkout.total_shipping_price_set || 0),
+            items: mapLineItems(checkout.line_items || []),
+          };
+
+          emitPurchase(payload);
+
+          try {
+            window.sessionStorage.setItem(dedupeKey, '1');
+          } catch (_) {}
+        }
+
+        if (document.readyState === 'loading') {
+          document.addEventListener('DOMContentLoaded', trackCheckoutPurchase);
+        } else {
+          trackCheckoutPurchase();
+        }
+      })();
+    </script>
+
+    {% render 'main-react' %}
+  </head>
+
+  <body class="gradient">
+    {% render 'preloader' %}
+    <div id="root">
+      {% comment %} The React app will mount here. {% endcomment %}
+    </div>
+
+    {%- comment -%} Portal root for shopify-fixed navbar so it stays outside transformed ancestors {%- endcomment -%}
+    <div id="shopify-navbar-portal"></div>
+
+    {% comment %} 
+      We also include content_for_layout so standard Shopify pages (like /pages/...) 
+      still work even if they aren't handled by our React router.
+      We keep this outside of #root so React doesn't overwrite it.
+    {% endcomment %}
+    <div id="shopify-content" style="display: none;">
+      {{ content_for_layout }}
+    </div>
+
+  </body>
+</html>
+
+

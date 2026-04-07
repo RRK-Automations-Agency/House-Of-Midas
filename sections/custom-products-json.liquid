@@ -1,0 +1,54 @@
+{%- layout none -%}
+[
+  {%- for product in collections.all.products limit: 50 -%}
+    {
+      "id": {{ product.id | json }},
+      "title": {{ product.title | json }},
+      "handle": {{ product.handle | json }},
+      "product_type": {{ product.type | json }},
+      "category": {{ product.category.name | default: product.type | json }},
+      "tags": {{ product.tags | json }},
+      "body_html": {{ product.description | json }},
+      "metafields": {
+        "specs": {
+          "carat_weight": {{ product.metafields.custom.carat_weight.value | json }},
+          "carat_note": {{ product.metafields.custom.carat_note.value | json }},
+          "cut_grade": {{ product.metafields.custom.cut_grade.value | json }},
+          "cut_note": {{ product.metafields.custom.cut_note.value | json }},
+          "clarity": {{ product.metafields.custom.clarity.value | json }},
+          "clarity_note": {{ product.metafields.custom.clarity_note.value | json }},
+          "origin": {{ product.metafields.custom.origin.value | json }},
+          "origin_note": {{ product.metafields.custom.origin_note.value | json }}
+        }
+      },
+      "images": [
+        {%- for image in product.images -%}
+          { "src": {{ image.src | image_url: width: 2400 | json }} }{%- unless forloop.last -%},{%- endunless -%}
+        {%- endfor -%}
+      ],
+      "variants": [
+        {%- for variant in product.variants -%}
+          {
+            "id": {{ variant.id | json }},
+            "title": {{ variant.title | json }},
+            "available": {{ variant.available | json }},
+            "option1": {{ variant.option1 | json }},
+            "option2": {{ variant.option2 | json }},
+            "option3": {{ variant.option3 | json }},
+            "price": {{ variant.price | money_without_currency | json }},
+            "compare_at_price": {{ variant.compare_at_price | money_without_currency | json }}
+          }{%- unless forloop.last -%},{%- endunless -%}
+        {%- endfor -%}
+      ],
+      "options": [
+        {%- for option in product.options_with_values -%}
+          {
+            "name": {{ option.name | json }},
+            "position": {{ option.position | json }},
+            "values": {{ option.values | json }}
+          }{%- unless forloop.last -%},{%- endunless -%}
+        {%- endfor -%}
+      ]
+    }{%- unless forloop.last -%},{%- endunless -%}
+  {%- endfor -%}
+]

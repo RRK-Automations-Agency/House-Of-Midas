@@ -1,0 +1,17 @@
+<div class="page-width page-width--narrow">
+  <h1 className="main-page-title page-title h0">
+    {{ page.title | escape }}
+  </h1>
+  <div class="rte">
+    {{ page.content }}
+  </div>
+</div>
+
+{% schema %}
+{
+  "name": "Page",
+  "tag": "section",
+  "class": "section",
+  "settings": []
+}
+{% endschema %}

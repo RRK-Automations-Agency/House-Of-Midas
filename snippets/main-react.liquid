@@ -1,0 +1,8 @@
+{% comment %}
+  Include the bundled React application assets.
+{% endcomment %}
+
+{% assign react_entry_url = 'index.js' | asset_url %}
+
+{{ 'index.css' | asset_url | stylesheet_tag }}
+<script src="{{ react_entry_url }}" type="module" defer></script>

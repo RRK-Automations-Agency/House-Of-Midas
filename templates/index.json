@@ -1,0 +1,26 @@
+{
+  "sections": {
+    "main": {
+      "type": "main-react",
+      "settings": {}
+    },
+    "featured_slideshow": {
+      "type": "featured-slideshow",
+      "settings": {
+        "autoplay_delay": 6
+      }
+    },
+    "featured_collection_products": {
+      "type": "featured-collection-products",
+      "settings": {
+        "heading": "Featured Collection",
+        "product_limit": 4
+      }
+    }
+  },
+  "order": [
+    "main",
+    "featured_slideshow",
+    "featured_collection_products"
+  ]
+}
