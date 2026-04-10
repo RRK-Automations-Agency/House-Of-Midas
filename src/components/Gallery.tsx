@@ -37,11 +37,11 @@ const Gallery: React.FC = () => {
           className="text-center mb-16"
         >
           <div className="flex items-center justify-center gap-6">
-            <div className="flex-1 max-w-[90px] h-[1px] bg-gradient-to-r from-transparent to-[#d4a843]" />
-            <span className="block font-great-vibes text-[clamp(44px,6.5vw,84px)] font-normal text-[#d4a843] leading-none -mb-1 opacity-90">
+            <div className="flex-1 max-w-[90px] h-[1px] bg-gradient-to-r from-transparent to-secondary" />
+            <span className="block font-great-vibes text-[clamp(44px,6.5vw,84px)] font-normal text-secondary leading-none -mb-1 opacity-90">
               Product
             </span>
-            <div className="flex-1 max-w-[90px] h-[1px] bg-gradient-to-l from-transparent to-[#d4a843]" />
+            <div className="flex-1 max-w-[90px] h-[1px] bg-gradient-to-l from-transparent to-secondary" />
           </div>
           <span 
             className="block font-playfair-display text-[clamp(58px,9vw,118px)] font-bold italic leading-[0.88] tracking-[-0.01em] mt-0"
@@ -52,7 +52,7 @@ const Gallery: React.FC = () => {
           >
             Details
           </span>
-          <span className="block w-[80px] h-[2px] bg-gradient-to-r from-transparent via-[#d4a843] to-transparent mx-auto mt-[22px] opacity-90" />
+          <span className="block w-[80px] h-[2px] bg-gradient-to-r from-transparent via-secondary to-transparent mx-auto mt-[22px] opacity-90" />
         </motion.div>
 
         {/* Body */}
@@ -71,7 +71,7 @@ const Gallery: React.FC = () => {
                 key={idx}
                 onClick={() => setActiveImage(img)}
                 className={`w-[78px] md:w-[80px] h-[80px] overflow-hidden cursor-pointer border shrink-0 transition-all duration-300 group
-                  ${activeImage === img ? "opacity-100 border-[#d4a843]" : "opacity-62 border-transparent hover:opacity-100 hover:border-[rgba(212,168,67,0.4)]"}`}
+                  ${activeImage === img ? "opacity-100 border-secondary" : "opacity-62 border-transparent hover:opacity-100 hover:border-secondary/40"}`}
               >
                 <img 
                   src={img} 
@@ -107,8 +107,8 @@ const Gallery: React.FC = () => {
                 className="w-full h-full block object-cover transition-transform duration-700 cubic-bezier-[0.25,0.46,0.45,0.94] group-hover:scale-[1.04]"
               />
             </AnimatePresence>
-            <div className="absolute top-[-8px] left-[-8px] w-[40px] h-[40px] border-t border-l border-[#d4a843] z-10 opacity-60 pointer-events-none transition-all duration-400 group-hover:w-[60px] group-hover:h-[60px] group-hover:opacity-100" />
-            <div className="absolute bottom-[-8px] right-[-8px] w-[40px] h-[40px] border-b border-r border-[#d4a843] z-10 opacity-60 pointer-events-none transition-all duration-400 group-hover:w-[60px] group-hover:h-[60px] group-hover:opacity-100" />
+            <div className="absolute top-[-8px] left-[-8px] w-[40px] h-[40px] border-t border-l border-secondary z-10 opacity-60 pointer-events-none transition-all duration-400 group-hover:w-[60px] group-hover:h-[60px] group-hover:opacity-100" />
+            <div className="absolute bottom-[-8px] right-[-8px] w-[40px] h-[40px] border-b border-r border-secondary z-10 opacity-60 pointer-events-none transition-all duration-400 group-hover:w-[60px] group-hover:h-[60px] group-hover:opacity-100" />
           </motion.div>
 
           {/* Info */}
@@ -144,7 +144,7 @@ const Gallery: React.FC = () => {
                       : "pl-[16px]"
                   }`}
                 >
-                  <div className="font-jost text-[11px] font-bold tracking-[0.3em] uppercase text-[#1a0509]/60 mb-[6px]">
+                  <div className="font-jost text-[11px] font-bold tracking-[0.3em] uppercase text-secondary mb-[6px]">
                     {item.label}
                   </div>
                   <div className="font-jost text-[22px] font-bold text-[#1a0509] leading-tight mb-[4px]">
@@ -153,7 +153,7 @@ const Gallery: React.FC = () => {
                   <div 
                     className="font-jost text-[10px] font-semibold tracking-[0.2em] uppercase"
                     style={{
-                      background: "linear-gradient(90deg, var(--midas-gold), #d4a843)",
+                      background: "linear-gradient(90deg, var(--midas-gold), #8B7330)",
                       WebkitBackgroundClip: "text",
                       WebkitTextFillColor: "transparent",
                       backgroundClip: "text"

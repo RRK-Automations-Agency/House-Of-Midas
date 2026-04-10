@@ -61,11 +61,6 @@ const ROUTE_META: Record<string, MetaConfig> = {
     title: "Contact House of Midas | Jewellery Concierge",
     description: "Reach House of Midas for custom jewellery inquiries, order support, and concierge assistance.",
   },
-  "/sample-page": {
-    title: "House of Midas",
-    description: "House of Midas fine jewellery.",
-    noindex: true,
-  },
 };
 
 function normalizePath(pathname: string): string {

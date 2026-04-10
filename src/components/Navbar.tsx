@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useMemo } from "react";
 import { createPortal } from 'react-dom';
 import { Link, useLocation } from "react-router-dom";
 import { Menu, ShoppingBag, Search, User, Heart } from "lucide-react";
@@ -16,16 +16,18 @@ import {
 import { getCart } from '@/lib/shopify-cart';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useShopifyCustomer } from '@/contexts/ShopifyCustomerContext';
+import { useProducts } from '@/hooks/useProducts';
+import { normalizeCategory } from '@/lib/normalize';
 
 const logoImage = getAssetUrl("Gai_logo.svg");
 
-const ALL_COLLECTIONS = [
-  { name: "Rings", path: "/collections?category=Rings", key: "show_rings" },
-  { name: "Earrings", path: "/collections?category=Earrings", key: "show_earrings" },
-  { name: "Necklaces", path: "/collections?category=Necklaces", key: "show_necklaces" },
-  { name: "Bangles", path: "/collections?category=Bangles", key: "show_bangles" },
-  { name: "Bracelets", path: "/collections?category=Bracelets", key: "show_bracelets" },
-  { name: "Luxe Series", path: "/luxe", key: "show_luxe" },
+// Fallback collections shown while Shopify data is loading
+const FALLBACK_COLLECTIONS = [
+  { name: "Rings", path: "/collections?category=Rings" },
+  { name: "Earrings", path: "/collections?category=Earrings" },
+  { name: "Necklaces", path: "/collections?category=Necklaces" },
+  { name: "Bangles", path: "/collections?category=Bangles" },
+  { name: "Bracelets", path: "/collections?category=Bracelets" },
 ];
 
 const STORY_LINKS = [
@@ -115,8 +117,30 @@ const Navbar: React.FC = () => {
     return links.some(link => isActive(link.path));
   };
 
-  // Visible collections are driven by theme editor checkboxes exposed via Liquid on window.ShopifyThemeSettings.collectionsVisibility
-  const [visibleCollections, setVisibleCollections] = useState(ALL_COLLECTIONS.filter(c => c.key === 'show_rings'));
+  // Dynamic collections from Shopify products
+  const { products: navProducts } = useProducts();
+  const dynamicCollections = useMemo(() => {
+    if (navProducts.length === 0) return FALLBACK_COLLECTIONS;
+
+    const countMap = new Map<string, number>();
+    navProducts.forEach(p => {
+      const raw = String(p.category || "").trim();
+      if (!raw || raw.toLowerCase() === "jewellery") return;
+      const normalized = normalizeCategory(raw);
+      countMap.set(normalized, (countMap.get(normalized) || 0) + 1);
+    });
+
+    // Sort by product count (most first)
+    const sorted = Array.from(countMap.entries())
+      .sort((a, b) => b[1] - a[1])
+      .map(([name]) => ({
+        name,
+        path: `/collections?category=${encodeURIComponent(name)}`,
+      }));
+
+    return sorted.length > 0 ? sorted : FALLBACK_COLLECTIONS;
+  }, [navProducts]);
+
   const [cartCount, setCartCount] = useState<number>(0);
   const { customer: shopifyCustomer } = useShopifyCustomer();
 
@@ -145,27 +169,8 @@ const Navbar: React.FC = () => {
     };
     window.addEventListener('cart:updated', cartHandler as EventListener);
     
-    function computeVisible() {
-      try {
-        // @ts-ignore
-        const vis = (window?.ShopifyThemeSettings?.collectionsVisibility) || {};
-        const filtered = ALL_COLLECTIONS.filter(col => {
-          if (typeof vis[col.key] === 'boolean') return vis[col.key];
-          return col.key === 'show_rings';
-        });
-        setVisibleCollections(filtered);
-      } catch (e) {
-        setVisibleCollections(ALL_COLLECTIONS.filter(c => c.key === 'show_rings'));
-      }
-    }
-
-    computeVisible();
-    const handler = () => computeVisible();
-    window.addEventListener('shopify:settings:change', handler);
-    
     return () => {
       mounted = false;
-      window.removeEventListener('shopify:settings:change', handler);
       window.removeEventListener('cart:updated', cartHandler as EventListener);
     };
   }, []);
@@ -293,7 +298,7 @@ const Navbar: React.FC = () => {
           <div>
             <h3 className="text-[10px] uppercase tracking-[0.4em] text-secondary mb-4 px-4 font-bold">Collections</h3>
             <div className="flex flex-col space-y-4">
-              {visibleCollections.map((link) => (
+              {dynamicCollections.map((link) => (
                 <Link key={link.path} to={link.path} className={cn(
                   "text-sm uppercase tracking-widest px-4 py-2 transition-all duration-300 rounded-sm",
                   isActive(link.path) ? "bg-secondary/10 text-secondary font-bold" : "text-zinc-700 hover:bg-secondary/10 hover:text-secondary"
@@ -436,7 +441,7 @@ const Navbar: React.FC = () => {
                     <NavigationMenuTrigger className={cn(
                       "group relative bg-transparent hover:bg-transparent text-[12px] uppercase tracking-[0.24em] transition-all duration-300 h-auto py-2",
                       "after:absolute after:bottom-0 after:left-1/2 after:h-px after:w-0 after:bg-secondary after:transition-all after:duration-300 hover:after:w-full hover:after:left-0",
-                      isMenuSectionActive(visibleCollections) ? "text-secondary font-bold" : isTransparentMode ? "text-white" : "text-[#C6A75E]"
+                      isMenuSectionActive(dynamicCollections) ? "text-secondary font-bold" : isTransparentMode ? "text-white" : "text-[#C6A75E]"
                     )}>
                       Collections
                     </NavigationMenuTrigger>
@@ -447,7 +452,7 @@ const Navbar: React.FC = () => {
                           background: "linear-gradient(180deg, #fdf8f2 0%, #f5ead8 50%, #fdf8f2 100%)"
                         }}
                       >
-                        {visibleCollections.map((link) => (
+                        {dynamicCollections.map((link) => (
                           <ListItem
                             key={link.path}
                             title={link.name}

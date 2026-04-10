@@ -1,7 +1,6 @@
 import React, { useState, useMemo, useEffect } from "react";
 import Layout from "@/components/layouts/Layout";
 import ProductCard from "@/components/ProductCard";
-import { PRODUCTS as STATIC_PRODUCTS } from "../constants";
 import { motion, AnimatePresence } from "motion/react";
 import { useSearchParams } from "react-router-dom";
 import { Filter, X, Search, Loader2, ChevronDown } from "lucide-react";
@@ -9,6 +8,7 @@ import { useProducts } from "@/hooks/useProducts";
 import { getAssetUrl } from "@/lib/utils";
 import PageMeta from "@/components/common/PageMeta";
 import { createPortal } from "react-dom";
+import { normalizeCategory as sharedNormalizeCategory, normalizeMetal, getColorHex } from "@/lib/normalize";
 
 type PriceBand = {
   key: string;
@@ -49,8 +49,8 @@ const Collections: React.FC = () => {
     return isNaN(parsed) ? 0 : parsed;
   };
 
-  // Use live products if they exist, otherwise fallback to mock data (only after loading is complete)
-  const displayProducts = !loading && products.length > 0 ? products : (loading ? [] : STATIC_PRODUCTS);
+  // Only use live Shopify products — no static fallback
+  const displayProducts = products;
 
   // Sync with URL search parameter 'q'
   useEffect(() => {
@@ -90,6 +90,19 @@ const Collections: React.FC = () => {
   }, [isFilterOpen]);
 
   const currentCategory = searchParams.get("category") || "All";
+
+  const normalizeColorValue = (raw?: string): string | undefined => {
+    if (!raw?.trim()) return undefined;
+    const compact = raw.replace(/\s+/g, " ").trim();
+    const normalized = normalizeMetal(compact) ?? compact;
+    const cleaned = normalized.replace(/\s+/g, " ").trim();
+
+    // Keep logic dynamic: if a value still contains digits after normalization,
+    // treat it as a variant/size token instead of a display color.
+    if (/\d/.test(cleaned)) return undefined;
+
+    return cleaned;
+  };
   
   const isProductAvailable = (product: any): boolean => {
     if (Array.isArray(product.variants) && product.variants.length > 0) {
@@ -98,44 +111,39 @@ const Collections: React.FC = () => {
     return true;
   };
 
-  // Dynamic categories from Shopify JSON payload (no heuristics)
+  // Dynamic categories discovered from Shopify products — no hardcoded list
   const categories = useMemo(() => {
-    const categoryMap: Record<string, string> = {
-      ring: "Rings",
-      rings: "Rings",
-      necklace: "Necklaces",
-      necklaces: "Necklaces",
-      earring: "Earrings",
-      earrings: "Earrings",
-      bangle: "Bangles",
-      bangles: "Bangles",
-      bracelet: "Bracelets",
-      bracelets: "Bracelets",
-    };
-
-    const preferredOrder = ["Rings", "Necklaces", "Earrings", "Bangles", "Bracelets"];
-    const discovered = new Set<string>();
+    const countMap = new Map<string, number>();
 
     displayProducts.forEach((product) => {
       const raw = String(product.category || "").trim();
       if (!raw) return;
       if (raw.toLowerCase() === "jewellery") return;
 
-      const normalized = categoryMap[raw.toLowerCase()] || raw;
-      discovered.add(normalized);
+      const normalized = sharedNormalizeCategory(raw);
+      countMap.set(normalized, (countMap.get(normalized) || 0) + 1);
     });
 
-    const orderedMain = preferredOrder.filter((cat) => discovered.has(cat));
-    const extras = Array.from(discovered)
-      .filter((cat) => !preferredOrder.includes(cat))
-      .sort((a, b) => a.localeCompare(b));
+    // Sort categories by product count (most products first)
+    const sorted = Array.from(countMap.entries())
+      .sort((a, b) => b[1] - a[1])
+      .map(([cat]) => cat);
 
-    return ["All", ...orderedMain, ...extras];
+    return ["All", ...sorted];
   }, [displayProducts]);
 
   // Dynamic colors discovery from option values and metal fallback
   const availableColors = useMemo(() => {
-    const colorSet = new Set<string>();
+    const colorMap = new Map<string, string>();
+
+    const addColor = (raw?: string) => {
+      const normalized = normalizeColorValue(raw);
+      if (!normalized) return;
+      const key = normalized.toLowerCase();
+      if (!colorMap.has(key)) {
+        colorMap.set(key, normalized);
+      }
+    };
 
     displayProducts.forEach((product) => {
       if (Array.isArray(product.options)) {
@@ -143,18 +151,16 @@ const Collections: React.FC = () => {
           const optionName = option.name?.toLowerCase() || "";
           if (optionName.includes("color") || optionName.includes("colour")) {
             option.values?.forEach((value) => {
-              if (value?.trim()) colorSet.add(value.trim());
+              addColor(value);
             });
           }
         });
       }
 
-      if (product.metal?.trim()) {
-        colorSet.add(product.metal.trim());
-      }
+      addColor(product.metal);
     });
 
-    return Array.from(colorSet).sort((a, b) => a.localeCompare(b));
+    return Array.from(colorMap.values()).sort((a, b) => a.localeCompare(b));
   }, [displayProducts]);
 
   const availabilityOptions = useMemo(() => {
@@ -177,41 +183,28 @@ const Collections: React.FC = () => {
     [selectedPriceBand],
   );
 
-  // Map metal types to their colors for display
-  const getColorChip = (colorName: string): { light: string; dark: string } => {
-    const colorMap: Record<string, { light: string; dark: string }> = {
-      "Yellow Gold": { light: "#e5c786", dark: "#b39d5f" },
-      "Rose Gold": { light: "#e5b299", dark: "#b38966" },
-      "White Gold": { light: "#e5e5e5", dark: "#b3b3b3" },
-    };
-    return colorMap[colorName] || { light: "#d4a843", dark: "#a88235" };
-  };
+  // Map metal types to their colors for display — uses shared utility
+  const getColorChip = getColorHex;
 
   const filteredProducts = useMemo(() => {
     let result = displayProducts.filter((product) => {
-      const normalizeCategory = (value: string): string => {
-        const c = value.trim().toLowerCase();
-        if (c === "ring" || c === "rings") return "rings";
-        if (c === "necklace" || c === "necklaces") return "necklaces";
-        if (c === "earring" || c === "earrings") return "earrings";
-        if (c === "bangle" || c === "bangles") return "bangles";
-        if (c === "bracelet" || c === "bracelets") return "bracelets";
-        return c;
-      };
-
-      const productCategory = normalizeCategory(String(product.category || ""));
-      const selectedCategory = normalizeCategory(currentCategory);
-      const matchesCategory = selectedCategory === "all" || productCategory === selectedCategory;
+      const productCategory = sharedNormalizeCategory(String(product.category || ""));
+      const selectedCategory = sharedNormalizeCategory(currentCategory);
+      const matchesCategory = currentCategory === "All" || productCategory === selectedCategory;
 
       const matchesSearch = product.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
                            product.description.toLowerCase().includes(searchQuery.toLowerCase());
       const productColorValues = new Set<string>();
-      if (product.metal) productColorValues.add(product.metal);
+      const normalizedProductMetal = normalizeColorValue(product.metal);
+      if (normalizedProductMetal) productColorValues.add(normalizedProductMetal);
       if (Array.isArray(product.options)) {
         product.options.forEach((option) => {
           const optionName = option.name?.toLowerCase() || "";
           if (optionName.includes("color") || optionName.includes("colour")) {
-            option.values?.forEach((value) => productColorValues.add(value));
+            option.values?.forEach((value) => {
+              const normalizedValue = normalizeColorValue(value);
+              if (normalizedValue) productColorValues.add(normalizedValue);
+            });
           }
         });
       }

@@ -127,13 +127,13 @@ const Showcase: React.FC<ShowcaseProps> = ({ products }) => {
               <div className="flex flex-col items-center relative mb-8 sm:mb-12 lg:mb-16">
                 <div className="flex items-center gap-4 sm:gap-6 mb-4 sm:mb-6">
                   <div className="h-px w-10 sm:w-16 md:w-24 bg-gradient-to-r from-transparent via-gold-400 to-gold-500" />
-                  <span className="text-[10px] sm:text-xs tracking-[0.4em] text-gold-600 font-cinzel uppercase font-medium">Unique Masterpieces</span>
+                  <span className="text-[10px] sm:text-xs tracking-[0.4em] text-secondary font-cinzel uppercase font-medium">Unique Masterpieces</span>
                   <div className="h-px w-10 sm:w-16 md:w-24 bg-gradient-to-l from-transparent via-gold-400 to-gold-500" />
                 </div>
                 
                 <div className="relative inline-block text-center mb-10 sm:mb-16 md:mb-20">
                   <h2 className="m-0 flex flex-col items-center leading-none gap-0">
-                    <span className="font-great-vibes text-[clamp(40px,9vw,110px)] font-normal text-[#d4a843] block -mb-2 opacity-95 leading-none">
+                    <span className="font-great-vibes text-[clamp(40px,9vw,110px)] font-normal text-secondary block -mb-2 opacity-95 leading-none">
                       Featured
                     </span>
 
@@ -147,7 +147,7 @@ const Showcase: React.FC<ShowcaseProps> = ({ products }) => {
                         Collection
                       </span>
 
-                      <span className="font-great-vibes text-[clamp(1.5rem,4vw,2.5rem)] font-normal text-gold-500 block opacity-90">
+                      <span className="font-great-vibes text-[clamp(1.5rem,4vw,2.5rem)] font-normal text-secondary block opacity-90">
                         For You
                       </span>
                     </div>

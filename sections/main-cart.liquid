@@ -16,10 +16,10 @@
       <form action="{{ routes.cart_url }}" method="post" id="cart-form" class="grid grid-cols-1 lg:grid-cols-[1fr_380px] gap-12 lg:gap-20">
         <div class="cart-items-wrapper">
           <div class="hidden md:grid grid-cols-[1fr_120px_100px_100px] gap-4 mb-6 px-4">
-            <span class="font-jost text-[10px] uppercase tracking-[0.3em] text-secondary/60">Product</span>
-            <span class="font-jost text-[10px] uppercase tracking-[0.3em] text-secondary/60 text-center">Price</span>
-            <span class="font-jost text-[10px] uppercase tracking-[0.3em] text-secondary/60 text-center">Quantity</span>
-            <span class="font-jost text-[10px] uppercase tracking-[0.3em] text-secondary/60 text-right">Total</span>
+            <span class="font-jost text-[10px] uppercase tracking-[0.3em] text-[#8B7330]">Product</span>
+            <span class="font-jost text-[10px] uppercase tracking-[0.3em] text-[#8B7330] text-center">Price</span>
+            <span class="font-jost text-[10px] uppercase tracking-[0.3em] text-[#8B7330] text-center">Quantity</span>
+            <span class="font-jost text-[10px] uppercase tracking-[0.3em] text-[#8B7330] text-right">Total</span>
           </div>
 
           <div class="space-y-8">
@@ -38,7 +38,7 @@
                         <a href="{{ item.url }}">{{ item.product.title }}</a>
                       </h3>
                       {% unless item.product.has_only_default_variant %}
-                        <p class="font-jost text-xs text-secondary/70 italic mb-2">{{ item.variant.title }}</p>
+                        <p class="font-jost text-xs text-secondary/90 italic mb-2">{{ item.variant.title }}</p>
                       {% endunless %}
 
                       {%- comment -%} Product specifications from metafields (graceful when missing) {%- endcomment -%}
@@ -94,12 +94,12 @@
             
             <div class="space-y-4 mb-8">
               <div class="flex justify-between items-center">
-                <span class="font-jost text-sm uppercase tracking-widest text-secondary/60">Subtotal</span>
+                <span class="font-jost text-sm uppercase tracking-widest text-[#8B7330]">Subtotal</span>
                 <span class="font-jost text-lg font-medium text-[#1a0509]">{{ cart.total_price | money }}</span>
               </div>
               <div class="flex justify-between items-center">
-                <span class="font-jost text-sm uppercase tracking-widest text-secondary/60">Shipping</span>
-                <span class="font-jost text-xs italic text-secondary/80">Calculated at completion</span>
+                <span class="font-jost text-sm uppercase tracking-widest text-[#8B7330]">Shipping</span>
+                <span class="font-jost text-xs italic text-[#8B7330]">Calculated at completion</span>
               </div>
               <div class="pt-4 border-t border-secondary/10 flex justify-between items-center">
                 <span class="font-jost text-base uppercase tracking-widest font-bold text-[#1a0509]">Grand Total</span>
@@ -127,7 +127,7 @@
           <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="text-secondary"><circle cx="8" cy="21" r="1"/><circle cx="19" cy="21" r="1"/><path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"/></svg>
         </div>
         <h2 class="font-playfair-display text-3xl font-bold text-[#1a0509] mb-4">Your collection is empty</h2>
-        <p class="font-jost text-secondary/70 mb-10 max-w-md mx-auto">Explore our curated galleries to find the perfect piece that resonates with your soul.</p>
+        <p class="font-jost text-secondary/90 mb-10 max-w-md mx-auto">Explore our curated galleries to find the perfect piece that resonates with your soul.</p>
         <a href="{{ routes.collections_url }}" class="inline-block bg-[#1a0509] text-white font-jost px-10 py-5 rounded-full text-xs uppercase tracking-[0.3em] font-bold transition-all duration-300 hover:bg-secondary hover:translate-y-[-2px]">
           Begin Exploration
         </a>
@@ -238,25 +238,44 @@
       }
 
       async function rerenderCartSection(currentContainer) {
-        const response = await fetch(`/cart?sections=${encodeURIComponent(sectionId)}`, {
-          credentials: 'same-origin',
-          headers: { 'Accept': 'application/json' },
-        });
-        if (!response.ok) throw new Error('Failed to refresh cart section');
+        let html = null;
 
-        const data = await response.json();
-        const html = data && data[sectionId];
-        if (!html || typeof html !== 'string') {
-          throw new Error('Cart section payload missing');
+        // --- Attempt 1: Shopify Section Rendering API ---
+        try {
+          const response = await fetch(`/cart?sections=${encodeURIComponent(sectionId)}`, {
+            credentials: 'same-origin',
+            headers: { 'Accept': 'application/json' },
+          });
+
+          if (response.ok) {
+            const data = await response.json();
+            // Try exact key first, then fall back to any key in the response
+            html = (data && data[sectionId]) || null;
+            if (!html && data && typeof data === 'object') {
+              const values = Object.values(data);
+              if (values.length > 0 && typeof values[0] === 'string') {
+                html = values[0];
+              }
+            }
+          }
+        } catch (sectionErr) {
+          console.warn('[cart] Section Rendering API failed, trying page reload', sectionErr);
         }
 
-        const parser = new DOMParser();
-        const doc = parser.parseFromString(html, 'text/html');
-        const nextContainer = doc.querySelector(SECTION_SELECTOR);
-        if (!nextContainer) throw new Error('Refreshed cart container missing');
+        // If the Sections API returned HTML, try to swap it inline
+        if (html) {
+          const parser = new DOMParser();
+          const doc = parser.parseFromString(html, 'text/html');
+          const nextContainer = doc.querySelector(SECTION_SELECTOR);
+          if (nextContainer) {
+            currentContainer.replaceWith(nextContainer);
+            bindCartHandlers(nextContainer);
+            return;
+          }
+        }
 
-        currentContainer.replaceWith(nextContainer);
-        bindCartHandlers(nextContainer);
+        // --- Fallback: reliable full-page reload ---
+        window.location.reload();
       }
 
       function bindCartHandlers(container) {

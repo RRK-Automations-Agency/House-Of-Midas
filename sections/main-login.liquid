@@ -5,7 +5,7 @@
     <div id="login" class="bg-white/40 backdrop-blur-xl rounded-3xl p-8 md:p-12 border border-secondary/20 shadow-2xl shadow-secondary/5 transition-all duration-500">
       <div class="text-center mb-10">
         <h1 class="font-playfair-display text-4xl font-bold text-[#1a0509] mb-4">Maison Login</h1>
-        <p class="font-jost text-sm tracking-[0.2em] uppercase text-secondary/70 italic">Enter the house of brilliance</p>
+        <p class="font-jost text-sm tracking-[0.2em] uppercase text-[#8B7330] italic">Enter the house of brilliance</p>
       </div>
 
       {%- form 'customer_login' -%}
@@ -17,7 +17,7 @@
 
         <div class="space-y-6">
           <div class="field group">
-            <label for="CustomerEmail" class="block font-jost text-[10px] uppercase tracking-[0.3em] text-secondary/60 mb-2 pl-1">Email Essence</label>
+            <label for="CustomerEmail" class="block font-jost text-[10px] uppercase tracking-[0.3em] text-[#8B7330] mb-2 pl-1">Email Essence</label>
             <input
               type="email"
               name="customer[email]"
@@ -33,8 +33,8 @@
 
           <div class="field group">
             <div class="flex justify-between items-center mb-2 pl-1">
-              <label for="CustomerPassword" class="block font-jost text-[10px] uppercase tracking-[0.3em] text-secondary/60">Secret Key</label>
-              <a href="#recover" id="RecoverPassword" class="font-jost text-[9px] uppercase tracking-[0.2em] text-secondary/80 hover:text-secondary transition-colors">Forgot key?</a>
+              <label for="CustomerPassword" class="block font-jost text-[10px] uppercase tracking-[0.3em] text-[#8B7330]">Secret Key</label>
+              <a href="#recover" id="RecoverPassword" class="font-jost text-[9px] uppercase tracking-[0.2em] text-[#8B7330] hover:text-secondary transition-colors">Forgot key?</a>
             </div>
             <input
               type="password"
@@ -54,7 +54,7 @@
         </div>
 
         <div class="mt-10 text-center border-t border-secondary/10 pt-8">
-          <p class="font-jost text-xs text-secondary/60 mb-4 italic">First visit to House of Midas?</p>
+          <p class="font-jost text-xs text-[#8B7330] mb-4 italic">First visit to House of Midas?</p>
           <a href="{{ routes.account_register_url }}" class="font-jost text-[11px] uppercase tracking-[0.3em] text-[#1a0509] font-bold hover:text-secondary transition-colors">
             Create an Account
           </a>
@@ -66,14 +66,14 @@
     <div id="recover" class="hidden bg-white/40 backdrop-blur-xl rounded-3xl p-8 md:p-12 border border-secondary/20 shadow-2xl shadow-secondary/5 transition-all duration-500">
       <div class="text-center mb-10">
         <h2 class="font-playfair-display text-4xl font-bold text-[#1a0509] mb-4">Restore Access</h2>
-        <p class="font-jost text-sm tracking-[0.2em] uppercase text-secondary/70 italic">Retrieve your heritage</p>
+        <p class="font-jost text-sm tracking-[0.2em] uppercase text-[#8B7330] italic">Retrieve your heritage</p>
       </div>
 
       {%- form 'recover_customer_password' -%}
         {% assign recover_success = form.posted_successfully? %}
 
         <div class="field group mb-8">
-          <label for="RecoverEmail" class="block font-jost text-[10px] uppercase tracking-[0.3em] text-secondary/60 mb-2 pl-1">Registered Email</label>
+          <label for="RecoverEmail" class="block font-jost text-[10px] uppercase tracking-[0.3em] text-[#8B7330] mb-2 pl-1">Registered Email</label>
           <input
             type="email"
             value=""
@@ -92,7 +92,7 @@
           <button class="w-full bg-[#1a0509] text-white font-jost py-5 rounded-full text-xs uppercase tracking-[0.4em] font-bold transition-all duration-300 hover:bg-secondary">
             Submit Recovery
           </button>
-          <a href="#login" id="HideRecoverPassword" class="block text-center font-jost text-[10px] uppercase tracking-[0.2em] text-secondary/60 hover:text-secondary py-2">
+          <a href="#login" id="HideRecoverPassword" class="block text-center font-jost text-[10px] uppercase tracking-[0.2em] text-[#8B7330] hover:text-secondary py-2">
             Cancel
           </a>
         </div>

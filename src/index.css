@@ -8,8 +8,8 @@
     --radius: 0rem;
     --background: 0 56% 97%; /* Soft Ivory #FBF1F1 */
     /* Midas gold - central variable for inline styles and gradients */
-    --midas-gold: #BF9340; /* Tailwind gold-500 */
-    --midas-gold-rgb: 191 147 64;
+    --midas-gold: #8B7330; /* Burnished Gold for improved contrast */
+    --midas-gold-rgb: 139 115 48;
     --foreground: 0 0% 5%; /* Velvet Black #0D0D0D */
     --card: 0 56% 97%;
     --card-foreground: 0 0% 5%;
@@ -17,7 +17,7 @@
     --popover-foreground: 0 0% 5%;
     --primary: 352 56% 28%; /* Royal Maroon #6E1F2A */
     --primary-foreground: 0 56% 97%;
-    --secondary: 43 48% 57%; /* Antique Gold #C6A75E */
+    --secondary: 44 49% 37%; /* Burnished Gold #8B7330 */
     --secondary-foreground: 0 0% 5%;
     --muted: 0 56% 97%;
     --muted-foreground: 352 56% 28%;

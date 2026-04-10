@@ -17,59 +17,78 @@ import {
   X,
 } from "lucide-react";
 import { toast } from "sonner";
-import { addToCart, getProductByHandle } from "@/lib/shopify-cart";
+import { addToCart, getProductByHandle, formatShopifyPrice, type Product, type ProductVariant, type ProductOption } from "@/lib/shopify-cart";
 import { getWishlistItems, toggleWishlistItem } from "@/lib/wishlist";
 import { trackAddToCart, trackViewItem } from "@/lib/analytics";
 import Lightbox from "@/components/ui/Lightbox";
 import PageMeta from "@/components/common/PageMeta";
 
-const KNOWN_METALS = ["Yellow Gold", "Rose Gold", "White Gold", "Platinum", "Silver", "Gold"];
+interface MediaItem {
+  type: 'image' | 'video';
+  src: string;
+  thumbnail?: string;
+  alt?: string;
+  sources?: Array<{ url: string; mime_type?: string; format?: string; height?: number; width?: number }>;
+}
 
-function normalizeMetalName(value: string): string | null {
-  const lower = value.toLowerCase();
-  if (lower.includes("yellow") && lower.includes("gold")) return "Yellow Gold";
-  if (lower.includes("rose") && lower.includes("gold")) return "Rose Gold";
-  if (lower.includes("white") && lower.includes("gold")) return "White Gold";
-  if (lower.includes("platinum")) return "Platinum";
-  if (lower.includes("silver")) return "Silver";
-  if (lower === "gold" || (lower.includes("gold") && !lower.includes("yellow") && !lower.includes("rose") && !lower.includes("white"))) return "Gold";
+// Reference measurement tables — shown as supplementary info when available
+const SIZE_REFERENCE: Record<string, { title: string; description: string; headers: string[]; rows: string[][] }> = {
+  ring: {
+    title: "Ring Sizing Reference",
+    description: "Measure the inner diameter of a ring that fits perfectly, or wrap a piece of string around your finger for the circumference.",
+    headers: ["Dia(mm)", "US", "UK"],
+    rows: [
+      ["14.1", "3", "F 1/2"],
+      ["14.9", "4", "H 1/2"],
+      ["15.7", "5", "J 1/2"],
+      ["16.5", "6", "L 1/2"],
+      ["17.3", "7", "N 1/2"],
+      ["18.1", "8", "P 1/2"],
+      ["19.0", "9", "R 1/2"],
+      ["19.8", "10", "T 1/2"],
+      ["20.6", "11", "V 1/2"],
+      ["21.4", "12", "X 1/2"],
+    ]
+  },
+  necklace: {
+    title: "Necklace Length Reference",
+    description: "Choosing the right length depends on your style and the necklace\u2019s intended position.",
+    headers: ["Length", "Style"],
+    rows: [
+      ["16 Inches (40cm)", "Choker Style"],
+      ["18 Inches (45cm)", "Standard Princess"],
+      ["20 Inches (50cm)", "Matinee Length"],
+      ["24 Inches (60cm)", "Opera Length"],
+    ]
+  },
+  bracelet: {
+    title: "Bracelet Sizing Reference",
+    description: "Measure your wrist circumference snugly. Add 1-2 cm for your preferred comfort.",
+    headers: ["Wrist (cm)", "Size"],
+    rows: [
+      ["14.0 - 15.0", "Extra Small"],
+      ["15.1 - 16.0", "Small"],
+      ["16.1 - 17.0", "Medium"],
+      ["17.1 - 18.0", "Large"],
+      ["18.1 - 19.5", "Extra Large"],
+    ]
+  }
+};
+
+/** Check if a product has a "size" option (case-insensitive) */
+function getProductSizeOption(product: { options?: ProductOption[] }): ProductOption | null {
+  if (!product?.options) return null;
+  return product.options.find(opt => opt.name.toLowerCase().includes('size')) || null;
+}
+
+/** Try to match a reference chart key from the product category */
+function getReferenceChartKey(category: string): string | null {
+  const cat = (category || "").toLowerCase();
+  if (cat.includes("ring")) return "ring";
+  if (cat.includes("necklace")) return "necklace";
+  if (cat.includes("bracelet")) return "bracelet";
+  if (cat.includes("bangle")) return "bracelet"; // bangles use bracelet sizing
   return null;
-}
-
-function extractVariantMetal(variant: any): string | undefined {
-  const candidates = [variant.option1, variant.option2, variant.option3, variant.title]
-    .filter(Boolean)
-    .map((v) => String(v));
-  for (const candidate of candidates) {
-    const normalized = normalizeMetalName(candidate);
-    if (normalized) return normalized;
-    const exact = KNOWN_METALS.find((m) => candidate.toLowerCase() === m.toLowerCase());
-    if (exact) return exact;
-  }
-  return undefined;
-}
-
-function extractVariantSize(variant: any): string | undefined {
-  const optionValues = [variant.option1, variant.option2, variant.option3]
-    .filter(Boolean)
-    .map((v) => String(v).trim());
-
-  for (const value of optionValues) {
-    if (/^\d+(\.\d+)?$/.test(value)) return value;
-    const match = value.match(/size\s*([\d.]+)/i);
-    if (match) return match[1];
-  }
-
-  const title = String(variant.title || "");
-  const titleMatch = title.match(/(?:size\s*)?([\d.]+)/i);
-  return titleMatch ? titleMatch[1] : undefined;
-}
-
-function getVariantOptionValue(variant: any, optionPosition: number | null): string | undefined {
-  if (!optionPosition || optionPosition < 1 || optionPosition > 3) return undefined;
-  const key = `option${optionPosition}` as const;
-  const value = variant[key];
-  return value ? String(value).trim() : undefined;
 }
 
 function parsePriceToNumber(value: string | number | undefined): number {
@@ -85,122 +104,69 @@ const ProductDetails: React.FC = () => {
   const { products, loading } = useProducts();
 
   const productFromList = useMemo(() => {
-    return products.find((p) => p.handle === handle);
+    return products.find((p: Product) => p.handle === handle);
   }, [products, handle]);
 
-  const [detailedProduct, setDetailedProduct] = useState<typeof productFromList | null>(null);
+  const [detailedProduct, setDetailedProduct] = useState<Product | null>(null);
   const product = detailedProduct || productFromList;
 
   const [activeIndex, setActiveIndex] = useState<number>(0);
-  const [playingVideo, setPlayingVideo] = useState(false);
-  const [lightboxOpen, setLightboxOpen] = useState(false);
-  const [isWishlisted, setIsWishlisted] = useState(false);
-  const [isSharing, setIsSharing] = useState(false);
-  const [isAddingToBag, setIsAddingToBag] = useState(false);
-  const [bagAddedPulse, setBagAddedPulse] = useState(false);
-  const [selectedSize, setSelectedSize] = useState("7");
-  const [selectedMetal, setSelectedMetal] = useState("Yellow Gold");
-  const [quantity, setQuantity] = useState(1);
+  const [playingVideo, setPlayingVideo] = useState<boolean>(false);
+  const [lightboxOpen, setLightboxOpen] = useState<boolean>(false);
+  const [isWishlisted, setIsWishlisted] = useState<boolean>(false);
+  const [isSharing, setIsSharing] = useState<boolean>(false);
+  const [isAddingToBag, setIsAddingToBag] = useState<boolean>(false);
+  const [bagAddedPulse, setBagAddedPulse] = useState<boolean>(false);
+  const [selectedOptions, setSelectedOptions] = useState<Record<string, string>>({});
+  const [quantity, setQuantity] = useState<number>(1);
   const [loadedMap, setLoadedMap] = useState<Record<string, boolean>>({});
 
-  const media = useMemo(() => {
-    if (!product) return [] as Array<{ type: 'image' | 'video'; src: string; thumbnail?: string; alt?: string }>;
-    return product.media || [];
+  const media = useMemo<MediaItem[]>(() => {
+    if (!product) return [];
+    return (product.media as MediaItem[]) || [];
   }, [product]);
 
-  const optionPositions = useMemo(() => {
-    const options = product?.options || [];
-    let metalPosition: number | null = null;
-    let sizePosition: number | null = null;
+  const selectedVariant = useMemo<ProductVariant | null>(() => {
+    if (!product || !product.variants?.length) return null;
 
-    options.forEach((option, index) => {
-      const name = String(option.name || '').toLowerCase();
-      const position = Number(option.position || index + 1);
-
-      if (metalPosition === null && /(metal|material|colour|color|finish)/i.test(name)) {
-        metalPosition = position;
-      }
-
-      if (sizePosition === null && /size/i.test(name)) {
-        sizePosition = position;
-      }
+    const candidates = product.variants.filter((v: ProductVariant) => {
+      // Each Shopify option corresponds to option1, option2, or option3 based on its position
+      return (product.options || []).every((opt: ProductOption) => {
+        const val = selectedOptions[opt.name];
+        if (!val) return true;
+        const pos = opt.position;
+        if (pos === 1) return v.option1 === val;
+        if (pos === 2) return v.option2 === val;
+        if (pos === 3) return v.option3 === val;
+        return true;
+      });
     });
 
-    return { metalPosition, sizePosition };
-  }, [product?.options]);
+    if (candidates.length === 0) return null;
+    // Prefer available variant, otherwise just return the first matching one
+    return candidates.find((v: ProductVariant) => v.available) || candidates[0];
+  }, [product, selectedOptions]);
 
-  const variantDetails = useMemo(() => {
-    if (!product?.variants || product.variants.length === 0) return [] as Array<any>;
-    return product.variants.map((variant) => ({
-      ...variant,
-      metal: (() => {
-        const explicitMetal = getVariantOptionValue(variant, optionPositions.metalPosition);
-        if (explicitMetal) {
-          return normalizeMetalName(explicitMetal) || explicitMetal;
-        }
-        return extractVariantMetal(variant);
-      })(),
-      size: getVariantOptionValue(variant, optionPositions.sizePosition) || extractVariantSize(variant),
-    }));
-  }, [product?.variants, optionPositions.metalPosition, optionPositions.sizePosition]);
-
-  const hasMetalVariants = useMemo(() => variantDetails.some((variant) => Boolean(variant.metal)), [variantDetails]);
-  const hasSizeVariants = useMemo(() => variantDetails.some((variant) => Boolean(variant.size)), [variantDetails]);
-
-  const metalOptions = useMemo(() => {
-    if (variantDetails.length === 0) {
-      const tagMatches = (product?.tags || [])
-        .map((tag) => tag.trim())
-        .filter((tag) => KNOWN_METALS.includes(tag));
-      const fallback = [product?.metal, ...tagMatches].filter(Boolean) as string[];
-      return fallback.length ? Array.from(new Set(fallback)) : ["Yellow Gold", "Rose Gold", "White Gold"];
-    }
-
-    const filteredBySize = hasSizeVariants && selectedSize
-      ? variantDetails.filter((v) => !v.size || v.size === selectedSize)
-      : variantDetails;
-
-    const source = filteredBySize.some((v) => v.available)
-      ? filteredBySize.filter((v) => v.available)
-      : filteredBySize;
-
-    const values = source.map((v) => v.metal).filter(Boolean) as string[];
-    const unique = Array.from(new Set(values));
-    return unique.length ? unique : ["Yellow Gold", "Rose Gold", "White Gold"];
-  }, [variantDetails, product?.metal, product?.tags, selectedSize, hasSizeVariants]);
-
-  const sizeOptions = useMemo(() => {
-    if (variantDetails.length === 0) return ["5", "6", "7", "8", "9"];
-
-    const filteredByMetal = hasMetalVariants && selectedMetal
-      ? variantDetails.filter((v) => !v.metal || v.metal === selectedMetal)
-      : variantDetails;
-
-    const source = filteredByMetal.some((v) => v.available)
-      ? filteredByMetal.filter((v) => v.available)
-      : filteredByMetal;
-
-    const values = source.map((v) => v.size).filter(Boolean) as string[];
-    const unique = Array.from(new Set(values));
-    return unique.length ? unique : ["5", "6", "7", "8", "9"];
-  }, [variantDetails, selectedMetal, hasMetalVariants]);
-
-  const selectedVariant = useMemo(() => {
-    if (variantDetails.length === 0) return null;
-
-    const candidates = variantDetails.filter((variant) => {
-      const metalOk = hasMetalVariants && selectedMetal ? variant.metal === selectedMetal : true;
-      const sizeOk = hasSizeVariants && selectedSize ? variant.size === selectedSize : true;
-      return metalOk && sizeOk;
-    });
-
-    return candidates.find((variant) => variant.available) || null;
-  }, [variantDetails, selectedMetal, selectedSize, hasMetalVariants, hasSizeVariants]);
-
-  const displayPrice = selectedVariant?.price || product?.price || "£0.00";
-  const displayComparePrice = selectedVariant?.comparePrice || product?.comparePrice || "";
-  const hasVariantChoices = variantDetails.length > 0;
+  const hasVariantChoices = (product?.options?.length || 0) > 0;
   const isVariantSelectionValid = !hasVariantChoices || Boolean(selectedVariant?.available);
+  const sizeOption = useMemo(() => (product ? getProductSizeOption(product) : null), [product]);
+
+  const selectedOptionsText = useMemo(() => {
+    if (!product?.options?.length) return "";
+    return product.options
+      .map(opt => {
+        const val = selectedOptions[opt.name];
+        if (!val) return null;
+        return `${opt.name}: ${val}`;
+      })
+      .filter(Boolean)
+      .join(" / ");
+  }, [selectedOptions, product?.options]);
+
+  const displayPrice = formatShopifyPrice(selectedVariant?.price || product?.price);
+  const displayComparePrice = (selectedVariant?.comparePrice || product?.comparePrice) 
+    ? formatShopifyPrice(selectedVariant?.comparePrice || product?.comparePrice) 
+    : "";
 
   const canonicalUrl = useMemo(() => {
     if (!product?.handle) return undefined;
@@ -222,9 +188,9 @@ const ProductDetails: React.FC = () => {
 
     const imageSources = [
       product.image,
-      ...media.filter((item) => item.type === 'image').map((item) => item.src),
+      ...media.filter((item: MediaItem) => item.type === 'image').map((item: MediaItem) => item.src),
     ]
-      .map((src) => {
+      .map((src: string | undefined) => {
         try {
           if (!src) return null;
           const base = typeof window !== 'undefined' ? window.location.origin : canonicalUrl;
@@ -270,12 +236,12 @@ const ProductDetails: React.FC = () => {
     return schema;
   }, [product, canonicalUrl, media, seoDescription, selectedVariant?.id, selectedVariant?.price, selectedVariant?.sku, isVariantSelectionValid]);
 
-  const relatedProducts = useMemo(() => {
+  const relatedProducts = useMemo<Product[]>(() => {
     if (!product) return [];
 
     return [...products]
-      .filter((p) => p.handle !== product.handle)
-      .sort((a, b) => {
+      .filter((p: Product) => p.handle !== product.handle)
+      .sort((a: Product, b: Product) => {
         const aScore = Number(a.category === product.category) + Number(a.metal === product.metal);
         const bScore = Number(b.category === product.category) + Number(b.metal === product.metal);
         return bScore - aScore;
@@ -296,8 +262,8 @@ const ProductDetails: React.FC = () => {
     if (loadedMap[src]) return;
     const img = new Image();
     img.src = src;
-    img.onload = () => setLoadedMap((m) => ({ ...m, [src]: true }));
-    img.onerror = () => setLoadedMap((m) => ({ ...m, [src]: false }));
+    img.onload = () => setLoadedMap((m: Record<string, boolean>) => ({ ...m, [src]: true }));
+    img.onerror = () => setLoadedMap((m: Record<string, boolean>) => ({ ...m, [src]: false }));
   };
 
   // Preload current and neighbor images when activeIndex or media changes
@@ -313,7 +279,7 @@ const ProductDetails: React.FC = () => {
 
   const prevMedia = () => {
     if (!media || media.length === 0) return;
-    setActiveIndex((i) => {
+    setActiveIndex((i: number) => {
       const ni = (i - 1 + media.length) % media.length;
       setPlayingVideo(media[ni]?.type === 'video');
       return ni;
@@ -322,7 +288,7 @@ const ProductDetails: React.FC = () => {
 
   const nextMedia = () => {
     if (!media || media.length === 0) return;
-    setActiveIndex((i) => {
+    setActiveIndex((i: number) => {
       const ni = (i + 1) % media.length;
       setPlayingVideo(media[ni]?.type === 'video');
       return ni;
@@ -343,23 +309,16 @@ const ProductDetails: React.FC = () => {
     return () => { mounted = false; };
   }, [handle]);
 
-  const estimatedArrival = useMemo(() => {
-    const d = new Date();
-    d.setDate(d.getDate() + 10);
-    return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
-  }, []);
 
   React.useEffect(() => {
-    if (metalOptions.length) {
-      setSelectedMetal((prev) => (metalOptions.includes(prev) ? prev : metalOptions[0]));
+    if (product && product.options?.length) {
+      const initial: Record<string, string> = {};
+      product.options.forEach(opt => {
+        if (opt.values?.length) initial[opt.name] = opt.values[0];
+      });
+      setSelectedOptions(initial);
     }
-  }, [metalOptions]);
-
-  React.useEffect(() => {
-    if (sizeOptions.length) {
-      setSelectedSize((prev) => (sizeOptions.includes(prev) ? prev : sizeOptions[0]));
-    }
-  }, [sizeOptions]);
+  }, [product?.id, product?.options]);
 
   React.useEffect(() => {
     if (!product) return;
@@ -367,14 +326,14 @@ const ProductDetails: React.FC = () => {
     let mounted = true;
     const syncWishlist = async () => {
       try {
-        const { items } = await getWishlistItems();
+        const { items } = (await getWishlistItems()) as { items: any[] };
         if (mounted) {
           const isPresent = items.some(
-            (item) => String(item.id) === String(product.id) || (item.handle && item.handle === product.handle),
+            (item: any) => String(item.id) === String(product.id) || (item.handle && item.handle === product.handle),
           );
           setIsWishlisted(isPresent);
         }
-      } catch (err) {
+      } catch (err: any) {
         console.warn("Failed to sync wishlist state", err);
       }
     };
@@ -431,8 +390,8 @@ const ProductDetails: React.FC = () => {
       });
       window.dispatchEvent(new CustomEvent("cart:updated"));
       setTimeout(() => setBagAddedPulse(false), 850);
-    } catch (err) {
-      toast.error("Could not add to cart");
+    } catch (err: any) {
+      toast.error(err.message || "Could not add to cart");
     } finally {
       setIsAddingToBag(false);
     }
@@ -441,9 +400,9 @@ const ProductDetails: React.FC = () => {
   const handleWishlistToggle = async () => {
     if (!product) return;
     try {
-      const { items } = await toggleWishlistItem(product.id, product.handle, isWishlisted);
+      const { items } = (await toggleWishlistItem(product.id, product.handle, isWishlisted)) as { items: any[] };
       const nowWishlisted = items.some(
-        (item) => String(item.id) === String(product.id) || (item.handle && item.handle === product.handle),
+        (item: any) => String(item.id) === String(product.id) || (item.handle && item.handle === product.handle),
       );
       setIsWishlisted(nowWishlisted);
 
@@ -455,7 +414,7 @@ const ProductDetails: React.FC = () => {
         toast.info("Removed from Wishlist");
       }
       window.dispatchEvent(new Event("wishlist-updated"));
-    } catch (err) {
+    } catch (err: any) {
       toast.error("Could not update wishlist");
     }
   };
@@ -479,7 +438,7 @@ const ProductDetails: React.FC = () => {
           description: "Product link copied to clipboard for sharing.",
         });
       }
-    } catch (err) {
+    } catch (err: any) {
       if ((err as Error).name !== "AbortError") {
         toast.error("Could not share product");
       }
@@ -552,7 +511,7 @@ const ProductDetails: React.FC = () => {
           <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)] gap-10 xl:gap-14 items-start">
             <div className="flex flex-col-reverse md:flex-row gap-4 md:gap-5">
               <div className="flex md:flex-col gap-2.5 overflow-x-auto md:overflow-visible hide-scrollbar pb-2 md:pb-0">
-                {media.map((m, idx) => (
+                {media.map((m: MediaItem, idx: number) => (
                   <button
                     key={idx}
                     onClick={() => {
@@ -581,14 +540,14 @@ const ProductDetails: React.FC = () => {
                 <div className="flex-1 aspect-[4/5] bg-white relative overflow-hidden border border-[#1a0509]/10 shadow-[0_12px_30px_rgba(0,0,0,0.04)]">
                 <AnimatePresence mode="wait">
                   {(() => {
-                      const current = media[activeIndex] || { type: 'image', src: product.image, thumbnail: product.image };
+                      const current: MediaItem = media[activeIndex] || { type: 'image', src: product.image, thumbnail: product.image };
                       const imgSrc = current?.src || product.image || '';
                       if (current.type === 'video' && playingVideo && current.src) {
                         return (
                           <motion.div key={`video-${activeIndex}`} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.3 }} className="w-full h-full">
                             <video controls playsInline className="w-full h-full object-cover" poster={current.thumbnail || product.image} crossOrigin="anonymous" onError={() => { toast.error('Video failed to load'); setPlayingVideo(false); }}>
-                              {Array.isArray((current as any).sources) && (current as any).sources.length ? (
-                                (current as any).sources.map((s: any, i: number) => (
+                              {Array.isArray(current.sources) && current.sources.length ? (
+                                current.sources.map((s: { url: string; mime_type?: string; format?: string }, i: number) => (
                                   <source key={i} src={s.url} type={s.mime_type || (s.format ? `video/${s.format}` : 'video/mp4')} />
                                 ))
                               ) : (
@@ -696,63 +655,75 @@ const ProductDetails: React.FC = () => {
                 {/* Estimated arrival and Shipping removed as requested */}
               </div>
 
-              <p className="font-cormorant text-[18px] md:text-[19px] italic leading-[1.65] text-[#1a0509] mb-7 pb-7 border-b border-[#1a0509]/10 font-medium">
-                {product.description ||
-                  "A masterpiece of artisanal craftsmanship, meticulously refined to reveal the soul of precious metals and light. This singular piece embodies the heritage and elegance that defines the House of Midas."}
-              </p>
+              {product.descriptionHtml ? (
+                <div 
+                  className="font-cormorant text-[18px] md:text-[19px] italic leading-[1.65] text-[#1a0509] mb-7 pb-7 border-b border-[#1a0509]/10 font-medium"
+                  dangerouslySetInnerHTML={{ __html: product.descriptionHtml }}
+                />
+              ) : product.description ? (
+                <p className="font-cormorant text-[18px] md:text-[19px] italic leading-[1.65] text-[#1a0509] mb-7 pb-7 border-b border-[#1a0509]/10 font-medium">
+                  {product.description}
+                </p>
+              ) : null}
 
-              <div className="space-y-5 mb-8">
-                <div>
-                  <div className="text-[9px] uppercase tracking-[0.36em] text-[#1a0509]/60 mb-2.5">Metal</div>
-                  <div className="flex flex-wrap gap-2">
-                    {metalOptions.map((metal) => (
-                      <button
-                        key={metal}
-                        onClick={() => setSelectedMetal(metal)}
-                        disabled={hasVariantChoices && !variantDetails.some((v) => {
+              <div className="space-y-6 mb-8">
+                {product.options && product.options.map((option: ProductOption) => (
+                  <div key={option.name}>
+                    <div className="text-[9px] uppercase tracking-[0.36em] text-[#1a0509]/60 mb-2.5">{option.name}</div>
+                    <div className="flex flex-wrap gap-2">
+                      {option.values.map((value: string) => {
+                        const isSelected = selectedOptions[option.name] === value;
+                        
+                        // Check availability for this specific option value
+                        // A value is "available" if there exists ANY available variant that matches 
+                        // all OTHER currently selected options plus THIS value.
+                        const isAvailable = product.variants?.some((v: ProductVariant) => {
                           if (!v.available) return false;
-                          const metalMatch = hasMetalVariants ? v.metal === metal : true;
-                          const sizeMatch = hasSizeVariants && selectedSize ? v.size === selectedSize : true;
-                          return metalMatch && sizeMatch;
-                        })}
-                        className={`h-9 px-3.5 text-[9px] uppercase tracking-[0.24em] border transition-colors ${
-                          selectedMetal === metal
-                            ? "bg-[#1a0509] text-[#f0cc6e] border-[#1a0509]"
-                            : "bg-white text-[#1a0509] border-[#1a0509]/15 hover:border-[#1a0509]/40"
-                        }`}
-                      >
-                        {metal}
-                      </button>
-                    ))}
-                  </div>
-                </div>
+                          
+                          // Must match THIS value at THIS position
+                          const thisPos = option.position as 1 | 2 | 3;
+                          if (v[`option${thisPos}` as keyof ProductVariant] !== value) return false;
+                          
+                          // Must match ALL OTHER selected options
+                          return (product.options || []).every((otherOpt: ProductOption) => {
+                            if (otherOpt.name === option.name) return true;
+                            const otherVal = selectedOptions[otherOpt.name];
+                            if (!otherVal) return true;
+                            const otherPos = otherOpt.position as 1 | 2 | 3;
+                            return v[`option${otherPos}` as keyof ProductVariant] === otherVal;
+                          });
+                        });
 
-                {/* Color section removed per design request */}
-
-                <div>
-                  <div className="text-[9px] uppercase tracking-[0.36em] text-[#1a0509]/60 mb-2.5">Ring Size</div>
-                  <div className="flex flex-wrap gap-2">
-                    {sizeOptions.map((size) => (
-                      <button
-                        key={size}
-                        onClick={() => setSelectedSize(size)}
-                        disabled={hasVariantChoices && !variantDetails.some((v) => {
-                          if (!v.available) return false;
-                          const metalMatch = hasMetalVariants && selectedMetal ? v.metal === selectedMetal : true;
-                          const sizeMatch = hasSizeVariants ? v.size === size : true;
-                          return metalMatch && sizeMatch;
-                        })}
-                        className={`h-9 min-w-9 px-3 border text-[11px] font-medium transition-colors ${
-                          selectedSize === size
-                            ? "border-[#1a0509] bg-[#1a0509] text-[#f0cc6e]"
-                            : "border-[#1a0509]/15 bg-white text-[#1a0509] hover:border-[#1a0509]/40"
-                        }`}
-                      >
-                        {size}
-                      </button>
-                    ))}
+                        return (
+                          <button
+                            key={value}
+                            onClick={() => setSelectedOptions(prev => ({ ...prev, [option.name]: value }))}
+                            className={`h-9 px-3.5 text-[9px] uppercase tracking-[0.24em] border transition-colors ${
+                              isSelected
+                                ? "bg-[#1a0509] text-[#f0cc6e] border-[#1a0509]"
+                                : isAvailable 
+                                  ? "bg-white text-[#1a0509] border-[#1a0509]/15 hover:border-[#1a0509]/40"
+                                  : "bg-white text-[#1a0509]/30 border-[#1a0509]/5 cursor-not-allowed italic"
+                            }`}
+                          >
+                            {value}
+                          </button>
+                        );
+                      })}
+                    </div>
+                    {sizeOption && option.name === sizeOption.name && (
+                      <div className="mt-3">
+                        <p className="text-[10px] text-[#1a0509]/65">
+                          All sizes are US - see{" "}
+                          <Link to="/pages/size-guide" className="underline text-[#1a0509] hover:text-[#5c0d1a]">
+                            size guide
+                          </Link>{" "}
+                          for UK.
+                        </p>
+                      </div>
+                    )}
                   </div>
-                </div>
+                ))}
 
                 <div className="flex flex-wrap items-center justify-between gap-3 rounded-sm border border-[#1a0509]/10 bg-white px-3.5 py-2.5">
                   <div className="text-[9px] uppercase tracking-[0.3em] text-[#1a0509]/60">Quantity</div>
@@ -778,36 +749,6 @@ const ProductDetails: React.FC = () => {
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-x-8 gap-y-8 mb-8">
-                <div>
-                  <h4 className="text-[10px] uppercase tracking-[0.28em] text-[#1a0509]/60 mb-1.5 font-bold">Carat Weight</h4>
-                  <div className="font-jost text-[1.85rem] font-bold text-[#1a0509] leading-tight">{product.caratWeight ?? '—'}</div>
-                  <div className="text-[10px] uppercase tracking-[0.22em] text-[#d4a843] font-black mt-1.5 antialiased">
-                    {product.caratNote ?? ''}
-                  </div>
-                </div>
-                <div>
-                  <h4 className="text-[10px] uppercase tracking-[0.28em] text-[#1a0509]/60 mb-1.5 font-bold">Cut Grade</h4>
-                  <div className="font-jost text-[1.85rem] font-bold text-[#1a0509] leading-tight">{product.cutGrade ?? '—'}</div>
-                  <div className="text-[10px] uppercase tracking-[0.22em] text-[#d4a843] font-black mt-1.5 antialiased">
-                    {product.cutNote ?? ''}
-                  </div>
-                </div>
-                <div>
-                  <h4 className="text-[10px] uppercase tracking-[0.28em] text-[#1a0509]/60 mb-1.5 font-bold">Clarity</h4>
-                  <div className="font-jost text-[1.85rem] font-bold text-[#1a0509] leading-tight">{product.clarity ?? '—'}</div>
-                  <div className="text-[10px] uppercase tracking-[0.22em] text-[#d4a843] font-black mt-1.5 antialiased">
-                    {product.clarityNote ?? ''}
-                  </div>
-                </div>
-                <div>
-                  <h4 className="text-[10px] uppercase tracking-[0.28em] text-[#1a0509]/60 mb-1.5 font-bold">Origin</h4>
-                  <div className="font-jost text-[1.85rem] font-bold text-[#1a0509] leading-tight">{product.origin ?? '—'}</div>
-                  <div className="text-[10px] uppercase tracking-[0.22em] text-[#d4a843] font-black mt-1.5 antialiased">
-                    {product.originNote ?? ''}
-                  </div>
-                </div>
-              </div>
 
               <div className="flex flex-col gap-3 mb-8">
                 <motion.button
@@ -840,12 +781,14 @@ const ProductDetails: React.FC = () => {
                   </span>
                 </motion.button>
 
-                <div className="flex items-center gap-2 text-[10px] uppercase tracking-[0.18em] text-[#1a0509]/70">
-                  <Check className="w-4 h-4 text-[#d4a843]" />
-                  {isVariantSelectionValid
-                    ? `Selected: ${selectedMetal} | Size ${selectedSize}`
-                    : `Unavailable combination: ${selectedMetal} | Size ${selectedSize}`}
-                </div>
+                {selectedOptionsText && (
+                  <div className="flex items-center gap-2 text-[10px] uppercase tracking-[0.22em] text-[#1a0509]/70">
+                    <Check className={`w-4 h-4 ${isVariantSelectionValid ? "text-[#d4a843]" : "text-[#5c0d1a]"}`} />
+                    {isVariantSelectionValid
+                      ? `Selected: ${selectedOptionsText}`
+                      : `Unavailable: ${selectedOptionsText}`}
+                  </div>
+                )}
 
                 <div className="grid grid-cols-2 gap-4">
                   <button
@@ -872,10 +815,15 @@ const ProductDetails: React.FC = () => {
                   <summary className="cursor-pointer list-none text-[10px] uppercase tracking-[0.28em] text-[#1a0509] font-semibold">
                     Product Details
                   </summary>
-                  <p className="mt-3 text-sm leading-relaxed text-[#1a0509]/75">
-                    {product.description ||
-                      "Each creation is forged with precision and finished by hand to preserve brilliance, balance, and timeless wearability."}
-                  </p>
+                  <div className="mt-3 text-sm leading-relaxed text-[#1a0509]/75 space-y-4">
+                    {product.descriptionHtml ? (
+                      <div dangerouslySetInnerHTML={{ __html: product.descriptionHtml }} className="prose-direct" />
+                    ) : product.description ? (
+                      <p>{product.description}</p>
+                    ) : (
+                      <p className="italic text-[#1a0509]/40">No additional details provided.</p>
+                    )}
+                  </div>
                 </details>
                 <details className="group border border-[#1a0509]/10 bg-white/60 px-4 py-3">
                   <summary className="cursor-pointer list-none text-[10px] uppercase tracking-[0.28em] text-[#1a0509] font-semibold">
@@ -886,6 +834,62 @@ const ProductDetails: React.FC = () => {
                     window for unworn pieces.
                   </p>
                 </details>
+
+                {(() => {
+                  const sizeOption = getProductSizeOption(product);
+                  const refKey = getReferenceChartKey(String(product.category || ""));
+                  const refChart = refKey ? SIZE_REFERENCE[refKey] : null;
+
+                  // Show size guide if product has a size option OR if a reference chart matches
+                  if (!sizeOption && !refChart) return null;
+
+                  return (
+                    <details className="group border border-[#1a0509]/10 bg-white/60 px-4 py-3">
+                      <summary className="cursor-pointer list-none text-[10px] uppercase tracking-[0.28em] text-[#1a0509] font-semibold">
+                        Size Guide
+                      </summary>
+                      <div className="mt-3 text-sm leading-relaxed text-[#1a0509]/75">
+                        {/* Dynamic: show the actual available sizes from Shopify */}
+                        {sizeOption && sizeOption.values.length > 0 && (
+                          <div className="mb-4">
+                            <p className="text-[10px] uppercase tracking-[0.2em] text-[#1a0509]/60 mb-2">Available Sizes</p>
+                            <div className="flex flex-wrap gap-2">
+                              {sizeOption.values.map((v: string) => (
+                                <span key={v} className="px-3 py-1.5 border border-[#1a0509]/10 text-[11px] italic">{v}</span>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                        {/* Reference chart: only shown when a matching category chart exists */}
+                        {refChart && (
+                          <>
+                            <p className="mb-4 italic text-[12px]">{refChart.description}</p>
+                            <div className="overflow-x-auto">
+                              <table className="w-full text-[11px] text-left italic border-t border-[#1a0509]/5">
+                                {refChart.headers && (
+                                  <thead className="text-[10px] uppercase tracking-widest text-[#d4a843]">
+                                    <tr>
+                                      {refChart.headers.map((h: string) => <th key={h} className="py-2.5 font-bold">{h}</th>)}
+                                    </tr>
+                                  </thead>
+                                )}
+                                <tbody className="divide-y divide-[#1a0509]/5">
+                                  {refChart.rows.map((row: string[], i: number) => (
+                                    <tr key={i}>
+                                      {row.map((cell: string, j: number) => (
+                                        <td key={j} className="py-2">{cell}</td>
+                                      ))}
+                                    </tr>
+                                  ))}
+                                </tbody>
+                              </table>
+                            </div>
+                          </>
+                        )}
+                      </div>
+                    </details>
+                  );
+                })()}
               </div>
 
               <div className="grid grid-cols-3 pt-8 border-t border-[#1a0509]/10 gap-4 text-center">
@@ -924,7 +928,7 @@ const ProductDetails: React.FC = () => {
               </div>
 
               <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-5">
-                {relatedProducts.map((item) => (
+                {relatedProducts.map((item: Product) => (
                   <Link
                     key={item.handle}
                     to={`/products/${item.handle}`}

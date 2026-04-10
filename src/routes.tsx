@@ -16,7 +16,6 @@ import RefundPolicy from './pages/RefundPolicy';
 import PrivacyPolicy from './pages/PrivacyPolicy';
 import TermsOfService from './pages/TermsOfService';
 import Contact from './pages/Contact';
-import SamplePage from './pages/SamplePage';
 import Wishlist from './pages/Wishlist';
 import AccountRedirect from './pages/AccountRedirects';
 import ProductDetails from './pages/ProductDetails';
@@ -151,11 +150,6 @@ const routes: RouteConfig[] = [
     name: 'Contact',
     path: '/contact',
     element: <Contact />
-  },
-  {
-    name: 'Sample Page',
-    path: '/sample-page',
-    element: <SamplePage />
   },
   {
     name: 'Cart',

@@ -1,11 +1,12 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { Link } from "react-router-dom";
 // Last Updated: 2026-03-31T17:42:00Z (Force Refresh)
 import { Eye, ShoppingBag, Heart } from "lucide-react";
 import { toast } from "sonner";
-import { addToCart } from "@/lib/shopify-cart";
+import { addToCart, type ProductOption } from "@/lib/shopify-cart";
 import { getWishlistItems, toggleWishlistItem } from "@/lib/wishlist";
 import { trackAddToCart } from "@/lib/analytics";
+import { getColorHex } from "@/lib/normalize";
 
 interface ProductCardProps {
   product: {
@@ -21,6 +22,8 @@ interface ProductCardProps {
     hoverImage?: string;
     isHero?: boolean;
     comparePrice?: string;
+    metal?: string;
+    options?: ProductOption[];
   };
   enableHoverSwap?: boolean;
 }
@@ -68,11 +71,35 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, enableHoverSwap = fa
     img.src = product.hoverImage;
   }, [enableHoverSwap, product.hoverImage, product.image]);
 
-  const swatches = [
-    { name: "Yellow Gold", class: "bg-[#d4a843]" },
-    { name: "Rose Gold", class: "bg-[#c97b5a]" },
-    { name: "Silver", class: "bg-[#b8bcc2]" },
-  ];
+  // Derive swatches dynamically from product options or metal field
+  const swatches = useMemo(() => {
+    const colorValues: string[] = [];
+    
+    // Check options for color/colour/metal type options
+    if (Array.isArray(product.options)) {
+      for (const opt of product.options) {
+        const optName = (opt.name || "").toLowerCase();
+        if (optName.includes("color") || optName.includes("colour") || optName.includes("metal")) {
+          if (Array.isArray(opt.values)) {
+            for (const v of opt.values) {
+              const trimmed = v?.trim();
+              if (trimmed && !colorValues.includes(trimmed)) colorValues.push(trimmed);
+            }
+          }
+        }
+      }
+    }
+    
+    // Fallback to the single metal field if no color option found
+    if (colorValues.length === 0 && product.metal?.trim()) {
+      colorValues.push(product.metal.trim());
+    }
+    
+    return colorValues.map(name => ({
+      name,
+      colors: getColorHex(name),
+    }));
+  }, [product.options, product.metal]);
   const backImage = product.hoverImage || product.image;
   const canSwap = enableHoverSwap && !!product.hoverImage && product.hoverImage !== product.image;
 
@@ -228,26 +255,29 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, enableHoverSwap = fa
              </span>
           )}
         </div>
-        <div className="flex gap-[7px] items-center mt-2.5">
-          {swatches.map((swatch, idx) => (
-            <div
-              key={swatch.name}
-              title={swatch.name}
-              onClick={(e) => {
-                e.stopPropagation();
-                e.preventDefault();
-                setActiveSwatch(idx);
-              }}
-              className={`w-[13px] h-[13px] rounded-full border-[1.5px] border-transparent cursor-pointer transition-all duration-200 shrink-0 relative hover:scale-125 ${swatch.class}`}
-            >
+        {swatches.length > 0 && (
+          <div className="flex gap-[7px] items-center mt-2.5">
+            {swatches.map((swatch, idx) => (
               <div
-                className={`absolute -inset-[3px] rounded-full border transition-colors duration-200 ${
-                  activeSwatch === idx ? "border-[#d4a843]" : "border-transparent"
-                }`}
-              />
-            </div>
-          ))}
-        </div>
+                key={swatch.name}
+                title={swatch.name}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  e.preventDefault();
+                  setActiveSwatch(idx);
+                }}
+                className="w-[13px] h-[13px] rounded-full border-[1.5px] border-transparent cursor-pointer transition-all duration-200 shrink-0 relative hover:scale-125"
+                style={{ backgroundColor: swatch.colors.light }}
+              >
+                <div
+                  className={`absolute -inset-[3px] rounded-full border transition-colors duration-200 ${
+                    activeSwatch === idx ? "border-secondary" : "border-transparent"
+                  }`}
+                />
+              </div>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );

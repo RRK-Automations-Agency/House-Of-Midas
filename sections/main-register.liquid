@@ -3,7 +3,7 @@
     <div class="bg-white/40 backdrop-blur-xl rounded-3xl p-8 md:p-12 border border-secondary/20 shadow-2xl shadow-secondary/5">
       <div class="text-center mb-10">
         <h1 class="font-playfair-display text-4xl font-bold text-[#1a0509] mb-4">Maison Registry</h1>
-        <p class="font-jost text-sm tracking-[0.2em] uppercase text-secondary/70 italic">Join our circle of elegance</p>
+        <p class="font-jost text-sm tracking-[0.2em] uppercase text-[#8B7330] italic">Join our circle of elegance</p>
       </div>
 
       {%- form 'create_customer' -%}
@@ -16,7 +16,7 @@
         <div class="space-y-6">
           <div class="grid grid-cols-2 gap-4">
             <div class="field group">
-              <label for="RegisterFirstName" class="block font-jost text-[10px] uppercase tracking-[0.3em] text-secondary/60 mb-2 pl-1">First Name</label>
+              <label for="RegisterFirstName" class="block font-jost text-[10px] uppercase tracking-[0.3em] text-[#8B7330] mb-2 pl-1">First Name</label>
               <input
                 type="text"
                 name="customer[first_name]"
@@ -28,7 +28,7 @@
               >
             </div>
             <div class="field group">
-              <label for="RegisterLastName" class="block font-jost text-[10px] uppercase tracking-[0.3em] text-secondary/60 mb-2 pl-1">Last Name</label>
+              <label for="RegisterLastName" class="block font-jost text-[10px] uppercase tracking-[0.3em] text-[#8B7330] mb-2 pl-1">Last Name</label>
               <input
                 type="text"
                 name="customer[last_name]"
@@ -42,7 +42,7 @@
           </div>
 
           <div class="field group">
-            <label for="RegisterEmail" class="block font-jost text-[10px] uppercase tracking-[0.3em] text-secondary/60 mb-2 pl-1">Email Affinity</label>
+            <label for="RegisterEmail" class="block font-jost text-[10px] uppercase tracking-[0.3em] text-[#8B7330] mb-2 pl-1">Email Affinity</label>
             <input
               type="email"
               name="customer[email]"
@@ -56,7 +56,7 @@
           </div>
 
           <div class="field group">
-            <label for="RegisterPassword" class="block font-jost text-[10px] uppercase tracking-[0.3em] text-secondary/60 mb-2 pl-1">New Secret</label>
+            <label for="RegisterPassword" class="block font-jost text-[10px] uppercase tracking-[0.3em] text-[#8B7330] mb-2 pl-1">New Secret</label>
             <input
               type="password"
               name="customer[password]"
@@ -68,7 +68,7 @@
             >
           </div>
 
-          <p class="text-[10px] text-secondary/50 font-jost italic text-center px-4">
+          <p class="text-[10px] text-[#8B7330] font-jost italic text-center px-4">
             By creating an account, you agree to our terms of elegance and privacy collection.
           </p>
 
@@ -78,7 +78,7 @@
         </div>
 
         <div class="mt-10 text-center border-t border-secondary/10 pt-8">
-          <p class="font-jost text-xs text-secondary/60 mb-4 italic">Already part of the House?</p>
+          <p class="font-jost text-xs text-[#8B7330] mb-4 italic">Already part of the House?</p>
           <a href="{{ routes.account_login_url }}" class="font-jost text-[11px] uppercase tracking-[0.3em] text-[#1a0509] font-bold hover:text-secondary transition-colors">
             Sign In Instead
           </a>

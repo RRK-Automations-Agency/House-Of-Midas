@@ -40,22 +40,22 @@
                         <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
                       </div>
                       <div>
-                        <p class="font-jost text-[9px] uppercase tracking-[0.3em] text-secondary/50 mb-1 font-bold">Collection Ref.</p>
+                        <p class="font-jost text-[9px] uppercase tracking-[0.3em] text-secondary/80 mb-1 font-bold">Collection Ref.</p>
                         <a href="{{ order.customer_url }}" class="font-playfair-display text-2xl font-bold text-[#1a0509] hover:text-secondary transition-colors inline-block mb-1">#{{ order.name }}</a>
-                        <p class="font-jost text-xs text-secondary/60">{{ order.created_at | time_tag: format: 'date' }}</p>
+                        <p class="font-jost text-xs text-secondary/80">{{ order.created_at | time_tag: format: 'date' }}</p>
                       </div>
                     </div>
 
                     <div class="flex items-center gap-12">
                       <div class="text-center">
-                        <p class="font-jost text-[9px] uppercase tracking-[0.3em] text-secondary/50 mb-3 font-bold">Status</p>
+                        <p class="font-jost text-[9px] uppercase tracking-[0.3em] text-secondary/80 mb-3 font-bold">Status</p>
                         <span class="inline-block px-5 py-2 rounded-full text-[9px] uppercase tracking-[0.2em] font-bold shadow-sm
                           {% if order.fulfillment_status_label == 'Fulfilled' %}bg-green-50 text-green-700 border border-green-100{% else %}bg-secondary/5 text-secondary border border-secondary/10{% endif %}">
                           {{ order.fulfillment_status_label }}
                         </span>
                       </div>
                       <div class="text-right">
-                        <p class="font-jost text-[9px] uppercase tracking-[0.3em] text-secondary/50 mb-2 font-bold">Investment</p>
+                        <p class="font-jost text-[9px] uppercase tracking-[0.3em] text-secondary/80 mb-2 font-bold">Investment</p>
                         <p class="font-jost text-xl font-bold text-[#1a0509] tracking-widest">{{ order.total_price | money }}</p>
                       </div>
                     </div>
@@ -72,7 +72,7 @@
           {%- else -%}
             <div class="text-center py-28 bg-white/20 rounded-[3rem] border-2 border-dashed border-secondary/10 backdrop-blur-sm">
               <div class="w-20 h-20 bg-secondary/5 rounded-full flex items-center justify-center mx-auto mb-8">
-                <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="text-secondary/40"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+                <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="text-secondary/70"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
               </div>
               <p class="font-playfair-display italic text-secondary text-2xl tracking-wide max-w-sm mx-auto mb-10">Your collection is awaiting its first masterpiece.</p>
               <a href="{{ routes.collections_url }}" class="inline-block bg-[#1a0509] text-white font-jost px-12 py-5 rounded-full text-[10px] uppercase tracking-[0.4em] font-bold transition-all duration-500 hover:bg-secondary hover:shadow-2xl hover:-translate-y-1">Begin Your Legacy</a>
@@ -113,7 +113,7 @@
                 {{ customer.default_address | format_address | replace: '<address>', '' | replace: '</address>', '' }}
               </div>
             {%- else -%}
-              <p class="font-jost text-sm text-secondary/40 italic mb-10">No registry on file.</p>
+              <p class="font-jost text-sm text-secondary/70 italic mb-10">No registry on file.</p>
             {%- endif -%}
             <a href="{{ routes.account_addresses_url }}" class="block text-center border-2 border-[#1a0509] text-[#1a0509] font-jost py-5 rounded-full text-[10px] uppercase tracking-[0.3em] font-bold transition-all duration-500 hover:bg-[#1a0509] hover:text-[#f3efea] shadow-xl active:scale-95">
               Refine Addresses ({{ customer.addresses_count }})

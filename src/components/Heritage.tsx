@@ -114,7 +114,7 @@ const Heritage: React.FC = () => {
           whileInView={{ opacity: 1 }}
           viewport={{ once: true }}
           transition={{ delay: 0.4 }}
-          className="max-w-xl mx-auto text-lg md:text-xl font-cormorant italic text-secondary/80 leading-relaxed mb-32"
+          className="max-w-xl mx-auto text-lg md:text-xl font-cormorant italic text-secondary leading-relaxed mb-32"
         >
           Behind every masterpiece lies centuries of tradition, where gold and gems are transformed by the hands of our world-class artisans.
         </motion.p>
@@ -152,7 +152,7 @@ const Heritage: React.FC = () => {
 
               <div className="pt-6 relative">
                 <div className="absolute top-0 left-0 w-full h-[1px] bg-secondary/20" />
-                <p className="text-[10px] uppercase tracking-[0.3em] text-secondary/60 py-4 flex items-center gap-3">
+                <p className="text-[10px] uppercase tracking-[0.3em] text-secondary/80 py-4 flex items-center gap-3">
                   <span className="w-1 h-1 rounded-full bg-secondary" /> 
                   Uncompromising Excellence
                 </p>
@@ -194,7 +194,7 @@ const Heritage: React.FC = () => {
           </p>
           <div className="mt-10 flex flex-col">
             <span className="text-xs uppercase tracking-[0.4em] text-secondary font-bold">Élodie Midas</span>
-            <span className="text-[10px] uppercase tracking-[0.3em] text-secondary/60 mt-2">Creative Director</span>
+            <span className="text-[10px] uppercase tracking-[0.3em] text-secondary/80 mt-2">Creative Director</span>
           </div>
         </motion.div>
       </div>

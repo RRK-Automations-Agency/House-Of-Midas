@@ -193,7 +193,7 @@ const Contact: React.FC = () => {
         </div>
 
         <div className="hcp-field">
-          <input type="tel" name="contact[phone]" placeholder="Phone Number *" />
+          <input type="tel" name="contact[phone]" placeholder="Phone Number" />
         </div>
 
         <div className="hcp-field">

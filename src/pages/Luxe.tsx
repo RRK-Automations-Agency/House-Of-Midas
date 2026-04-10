@@ -1,7 +1,6 @@
 import React from "react";
 import Layout from "@/components/layouts/Layout";
 import { motion } from "motion/react";
-import { PRODUCTS as STATIC_PRODUCTS } from "@/constants";
 import { useProducts } from "@/hooks/useProducts";
 import { getAssetUrl } from "@/lib/utils";
 import { Loader2 } from "lucide-react";
@@ -9,8 +8,8 @@ import { Loader2 } from "lucide-react";
 const Luxe: React.FC = () => {
   const { products, loading } = useProducts();
   
-  // Shopify-first: only fallback to mock data once loading completes and no Shopify products are available.
-  const displayProducts = !loading && products.length > 0 ? products : (loading ? [] : STATIC_PRODUCTS);
+  // Only use live Shopify products — no static fallback
+  const displayProducts = products;
   const luxeProducts = displayProducts.slice(0, 3);
 
   if (loading && products.length === 0) {
@@ -70,7 +69,7 @@ const Luxe: React.FC = () => {
       <section className="py-32 bg-[#fdf8f2] border-t border-[#1a0509]/10">
         <div className="container mx-auto px-4 md:px-8">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-12">
-            {luxeProducts.map((product, idx) => (
+            {luxeProducts.map((product: { id: string; image: string; name: string; description: string }, idx: number) => (
               <motion.div
                 key={product.id}
                 initial={{ opacity: 0, y: 40 }}

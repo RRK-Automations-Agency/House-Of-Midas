@@ -9,7 +9,6 @@ import Gallery from "@/components/Gallery";
 import MediaSlideshow from "@/components/MediaSlideshow";
 import Testimonials from "@/components/Testimonials";
 import { useScroll } from "motion/react";
-import { PRODUCTS as STATIC_PRODUCTS } from "../constants";
 import { Loader2 } from "lucide-react";
 import { useProducts } from "@/hooks/useProducts";
 import PageMeta from "@/components/common/PageMeta";
@@ -18,8 +17,8 @@ const Home: React.FC = () => {
   const { products, loading } = useProducts();
   const containerRef = useRef<HTMLDivElement>(null);
   
-  // Use live products if they exist, otherwise fallback to mock data (only after loading is complete)
-  const allProducts = !loading && products.length > 0 ? products : (loading ? [] : STATIC_PRODUCTS);
+  // Only use live Shopify products — no static fallback
+  const allProducts = products;
 
   // Filter products by tag for dynamic layout control
   const { featuredProducts, slideshowItems } = React.useMemo(() => {

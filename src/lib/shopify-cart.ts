@@ -2,6 +2,7 @@
  * Shopify AJAX API helpers for Cart management
  * @see https://shopify.dev/docs/api/ajax
  */
+import { normalizeCategory, normalizeMetal } from "@/lib/normalize";
 
 export interface CartItem {
   id: number;
@@ -27,6 +28,7 @@ export interface Product {
   price: string;
   comparePrice: string;
   description: string;
+  descriptionHtml?: string;
   image: string;
   /** responsive srcSet string (e.g. '... 320w, ...') */
   srcSet?: string;
@@ -329,16 +331,6 @@ function mapShopifyProduct(p: any): Product {
     name: p.title,
     handle: p.handle,
     category: (() => {
-      const normalizeCategory = (value: string): string => {
-        const c = value.trim().toLowerCase();
-        if (c === "ring" || c === "rings") return "Rings";
-        if (c === "necklace" || c === "necklaces") return "Necklaces";
-        if (c === "earring" || c === "earrings") return "Earrings";
-        if (c === "bracelet" || c === "bracelets") return "Bracelets";
-        if (c === "bangle" || c === "bangles") return "Bangles";
-        return value.trim();
-      };
-
       // 1. Primary: Category emitted by our JSON view (taxonomy-aware)
       if (typeof p.category === 'string' && p.category.trim() !== "" && p.category.trim().toLowerCase() !== "jewellery") {
         return normalizeCategory(p.category);
@@ -356,7 +348,8 @@ function mapShopifyProduct(p: any): Product {
     price: firstVariant ? firstVariant.price : "£0.00",
     comparePrice: firstVariant?.comparePrice || "",
     // Keep full plain-text description (strip HTML but do not truncate)
-    description: (p.body_html || "").replace(/<[^>]*>?/gm, "").trim(),
+    description: ((p.body_html || p.description) || "").replace(/<[^>]*>?/gm, "").trim(),
+    descriptionHtml: p.body_html || p.description || "",
     image: primaryImage,
     srcSet: buildShopifySrcSet(primaryImage),
     hoverImage: secondImage,
@@ -364,17 +357,6 @@ function mapShopifyProduct(p: any): Product {
     media: mediaItems,
     isHero: tagList.some((tag) => tag.toLowerCase() === 'hero'),
     metal: (() => {
-      const metalTypes = ["Yellow Gold", "Rose Gold", "White Gold"];
-      
-      // Normalize metal name: convert to lowercase and map to standard format
-      const normalizeMetal = (str: string): string | null => {
-        const lower = str.toLowerCase().trim();
-        if (lower.includes("yellow") && lower.includes("gold")) return "Yellow Gold";
-        if (lower.includes("rose") && lower.includes("gold")) return "Rose Gold";
-        if (lower.includes("white") && lower.includes("gold")) return "White Gold";
-        return null;
-      };
-      
       // First check tags (case-insensitive)
       if (tagList.length > 0) {
         for (const tag of tagList) {
@@ -409,14 +391,22 @@ function mapShopifyProduct(p: any): Product {
 
 /**
  * Safely format a Shopify price value into a localized GBP string.
- * Accepts numbers or numeric strings (e.g. "29.00"). Falls back to £0.00
+ * Accepts numbers or numeric strings (e.g. "29.00" or 2900 in cents). Falls back to £0.00
  */
-function formatShopifyPrice(value: any): string {
+export function formatShopifyPrice(value: any): string {
   if (value === undefined || value === null) return "£0.00";
-  // Shopify prices are usually strings like "29.00" or numbers; parse as float
-  const n = Number(String(value).replace(/[^0-9.\-]+/g, ''));
+  
+  // Clean the input to get a numeric string
+  const strValue = String(value).replace(/[^0-9.\-]+/g, '');
+  let n = Number(strValue);
   if (!isFinite(n)) return "£0.00";
-  // Ensure two decimal places for currency display
+
+  // If the input doesn't have a decimal point and is handled as an integer, 
+  // it's likely Shopify's cents-based price (e.g., 2900 -> 29.00)
+  if (!strValue.includes('.') && Number.isInteger(n)) {
+    n = n / 100;
+  }
+
   return `£${n.toLocaleString('en-GB', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 }
 

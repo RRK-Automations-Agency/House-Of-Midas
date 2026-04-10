@@ -70,7 +70,7 @@ const ReviewCard: React.FC<{ review: Review; index: number; onImageClick: (revie
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true }}
       transition={{ duration: 0.6, delay: index * 0.1, ease: "easeOut" }}
-      className="bg-[#fcf8f3] border border-[#d4a843]/10 shadow-[0_8px_40px_rgba(61,7,16,0.04)] sm:p-10 p-6 rounded-3xl relative group hover:shadow-[0_20px_60px_rgba(61,7,16,0.08)] transition-all duration-700 flex flex-col h-full"
+      className="bg-[#fcf8f3] border border-secondary/20 shadow-[0_8px_40px_rgba(61,7,16,0.04)] sm:p-10 p-6 rounded-3xl relative group hover:shadow-[0_20px_60px_rgba(61,7,16,0.08)] transition-all duration-700 flex flex-col h-full"
     >
       {/* Quote Icon Watermark */}
       <Quote className="text-[#3d0710]/5 absolute top-8 right-10 w-16 h-16 pointer-events-none group-hover:text-[#3d0710]/10 transition-colors duration-500" />
@@ -78,7 +78,7 @@ const ReviewCard: React.FC<{ review: Review; index: number; onImageClick: (revie
       {/* Header with Stars */}
       <div className="flex items-center justify-center sm:justify-start gap-1 mb-6">
         {[...Array(5)].map((_, i) => (
-          <Star key={i} className="w-4 h-4 fill-[#d4a843] text-[#d4a843]" />
+          <Star key={i} className="w-4 h-4 fill-secondary text-secondary" />
         ))}
       </div>
 
@@ -92,10 +92,10 @@ const ReviewCard: React.FC<{ review: Review; index: number; onImageClick: (revie
       {/* Bottom Section: Author & Image */}
       <div className="flex flex-col sm:flex-row items-center sm:items-center justify-between gap-6 pt-8 border-t border-[#d4a843]/10">
         <div className="flex flex-col items-center sm:items-start text-center sm:text-left">
-          <strong className="font-playfair-display font-semibold text-[#3d0710] text-xl mb-1 group-hover:text-[#BF9340] transition-colors duration-300">
+          <strong className="font-playfair-display font-semibold text-[#3d0710] text-xl mb-1 group-hover:text-secondary transition-colors duration-300">
             {review.name}
           </strong>
-          <span className="text-[10px] uppercase tracking-[0.2em] text-[#d4a843] font-inter font-bold opacity-80">
+          <span className="text-[10px] uppercase tracking-[0.2em] text-secondary font-inter font-bold opacity-80">
             {review.role}
           </span>
         </div>
@@ -119,7 +119,7 @@ const ReviewCard: React.FC<{ review: Review; index: number; onImageClick: (revie
             </div>
 
             {imgs.length > 1 && (
-              <div className="absolute -bottom-2 -right-2 flex gap-1 items-center bg-white/90 backdrop-blur-sm p-1 rounded-full border border-[#d4a843]/20 shadow-lg opacity-0 group-hover/gallery:opacity-100 transition-all duration-300 scale-90 group-hover/gallery:scale-100">
+              <div className="absolute -bottom-2 -right-2 flex gap-1 items-center bg-white/90 backdrop-blur-sm p-1 rounded-full border border-secondary/30 shadow-lg opacity-0 group-hover/gallery:opacity-100 transition-all duration-300 scale-90 group-hover/gallery:scale-100">
                 <button 
                   onClick={prev} 
                   className="p-1 hover:bg-[#3d0710] hover:text-white rounded-full transition-colors"
@@ -188,7 +188,7 @@ const Testimonials: React.FC = () => {
             className="flex flex-col items-center"
           >
             <h2 className="m-0 flex flex-col items-center leading-none gap-0">
-              <span className="font-great-vibes text-[clamp(28px,4vw,54px)] font-normal text-[#d4a843] block mb-2 opacity-90 leading-none">
+              <span className="font-great-vibes text-[clamp(28px,4vw,54px)] font-normal text-secondary block mb-2 opacity-90 leading-none">
                 Stories of
               </span>
 
@@ -208,9 +208,9 @@ const Testimonials: React.FC = () => {
               </div>
             </h2>
             <div className="flex items-center gap-4 mt-8">
-               <span className="h-px w-12 bg-[#d4a843]/40" />
-               <Star className="w-4 h-4 fill-[#d4a843] text-[#d4a843]" />
-               <span className="h-px w-12 bg-[#d4a843]/40" />
+               <span className="h-px w-12 bg-secondary/40" />
+               <Star className="w-4 h-4 fill-secondary text-secondary" />
+               <span className="h-px w-12 bg-secondary/40" />
             </div>
           </motion.div>
         </div>
