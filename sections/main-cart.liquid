@@ -1,9 +1,9 @@
-<div class="cart-container py-12 md:py-20" data-section-id="{{ section.id }}" data-section-type="cart">
+<div class="cart-container pt-4 pb-12 md:pt-6 md:pb-20" data-section-id="{{ section.id }}" data-section-type="cart">
   <div class="max-w-[1400px] mx-auto px-6 md:px-10">
     <div class="flex flex-col md:flex-row justify-between items-end mb-12 border-b border-secondary/20 pb-8">
       <div>
         <h1 class="font-playfair-display text-4xl md:text-5xl font-bold text-[#1a0509] mb-4">Your Collection</h1>
-        <p class="font-jost text-sm tracking-[0.2em] uppercase text-secondary/80">Refining your desires for the final acquisition</p>
+        <p class="font-jost text-sm tracking-[0.2em] uppercase text-[#6B5820]">Refining your desires for the final acquisition</p>
       </div>
       <a href="{{ routes.collections_url }}" class="font-jost text-[12px] uppercase tracking-[0.2em] text-[#1a0509] hover:text-secondary transition-colors mt-6 md:mt-0">
         Continue Browsing
@@ -15,30 +15,30 @@
     {% if cart.item_count > 0 %}
       <form action="{{ routes.cart_url }}" method="post" id="cart-form" class="grid grid-cols-1 lg:grid-cols-[1fr_380px] gap-12 lg:gap-20">
         <div class="cart-items-wrapper">
-          <div class="hidden md:grid grid-cols-[1fr_120px_100px_100px] gap-4 mb-6 px-4">
-            <span class="font-jost text-[10px] uppercase tracking-[0.3em] text-[#8B7330]">Product</span>
-            <span class="font-jost text-[10px] uppercase tracking-[0.3em] text-[#8B7330] text-center">Price</span>
-            <span class="font-jost text-[10px] uppercase tracking-[0.3em] text-[#8B7330] text-center">Quantity</span>
-            <span class="font-jost text-[10px] uppercase tracking-[0.3em] text-[#8B7330] text-right">Total</span>
+          <div class="hidden md:grid grid-cols-[1fr_auto_auto_auto] gap-6 mb-6 px-4">
+            <span class="font-jost text-[10px] uppercase tracking-[0.3em] text-[#6B5820]">Product</span>
+            <span class="font-jost text-[10px] uppercase tracking-[0.3em] text-[#6B5820] text-center">Price</span>
+            <span class="font-jost text-[10px] uppercase tracking-[0.3em] text-[#6B5820] text-center">Quantity</span>
+            <span class="font-jost text-[10px] uppercase tracking-[0.3em] text-[#6B5820] text-right">Total</span>
           </div>
 
           <div class="space-y-8">
             {% for item in cart.items %}
               <div class="cart-item group relative bg-white/40 backdrop-blur-sm rounded-xl p-4 md:p-6 transition-all duration-300 hover:shadow-xl hover:shadow-secondary/5 border border-secondary/10" data-key="{{ item.key }}">
-                <div class="grid grid-cols-[100px_1fr] md:grid-cols-[1fr_120px_100px_100px] items-center gap-4 md:gap-6">
+                <div class="grid grid-cols-2 md:grid-cols-[1fr_auto_auto_auto] items-center gap-4 md:gap-6">
                   <!-- Product Info -->
-                  <div class="flex items-center gap-4 md:gap-6">
+                  <div class="col-span-2 md:col-span-1 flex items-center gap-4 md:gap-6">
                     <div class="w-20 h-20 md:w-28 md:h-28 rounded-lg overflow-hidden bg-[#ede8e0] shrink-0">
                       {% if item.image %}
                         <img src="{{ item.image | image_url: width: 240 }}" alt="{{ item.product.title }}" width="{{ item.image.width }}" height="{{ item.image.height }}" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110">
                       {% endif %}
                     </div>
                     <div class="min-w-0">
-                      <h3 class="font-playfair-display text-lg md:text-xl font-bold text-[#1a0509] mb-1 truncate">
+                      <h3 class="font-playfair-display text-lg md:text-xl font-bold text-[#1a0509] mb-1">
                         <a href="{{ item.url }}">{{ item.product.title }}</a>
                       </h3>
                       {% unless item.product.has_only_default_variant %}
-                        <p class="font-jost text-xs text-secondary/90 italic mb-2">{{ item.variant.title }}</p>
+                        <p class="font-jost text-xs text-[#6B5820] italic mb-2">{{ item.variant.title }}</p>
                       {% endunless %}
 
                       {%- comment -%} Product specifications from metafields (graceful when missing) {%- endcomment -%}
@@ -65,7 +65,7 @@
                   </div>
 
                   <!-- Quantity -->
-                  <div class="flex items-center justify-center">
+                  <div class="flex items-center justify-start md:justify-center">
                     <div class="flex items-center border border-secondary/30 rounded-full bg-white/50 backdrop-blur-sm px-2">
                       <button type="button" class="qty-btn minus p-2 text-secondary hover:text-[#1a0509] transition-colors" data-key="{{ item.key }}" data-qty="{{ item.quantity | minus: 1 }}">
                         <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/></svg>
@@ -78,7 +78,7 @@
                   </div>
 
                   <!-- Total -->
-                  <div class="flex md:justify-end shrink-0">
+                  <div class="flex justify-end md:justify-end shrink-0">
                     <span class="font-jost text-base md:text-lg font-bold text-[#1a0509]">{{ item.original_line_price | money }}</span>
                   </div>
                 </div>
@@ -94,12 +94,12 @@
             
             <div class="space-y-4 mb-8">
               <div class="flex justify-between items-center">
-                <span class="font-jost text-sm uppercase tracking-widest text-[#8B7330]">Subtotal</span>
+                <span class="font-jost text-sm uppercase tracking-widest text-[#6B5820]">Subtotal</span>
                 <span class="font-jost text-lg font-medium text-[#1a0509]">{{ cart.total_price | money }}</span>
               </div>
               <div class="flex justify-between items-center">
-                <span class="font-jost text-sm uppercase tracking-widest text-[#8B7330]">Shipping</span>
-                <span class="font-jost text-xs italic text-[#8B7330]">Calculated at completion</span>
+                <span class="font-jost text-sm uppercase tracking-widest text-[#6B5820]">Shipping</span>
+                <span class="font-jost text-xs italic text-[#6B5820]">Calculated at completion</span>
               </div>
               <div class="pt-4 border-t border-secondary/10 flex justify-between items-center">
                 <span class="font-jost text-base uppercase tracking-widest font-bold text-[#1a0509]">Grand Total</span>

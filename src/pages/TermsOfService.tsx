@@ -6,7 +6,7 @@ import PageMeta from "@/components/common/PageMeta";
 const PolicyLayout: React.FC<{ title: string; children: React.ReactNode }> = ({ title, children }) => (
   <Layout>
     <section 
-      className="relative pt-20 sm:pt-[120px] pb-24 sm:pb-[130px] overflow-hidden"
+      className="relative pt-6 sm:pt-8 pb-24 sm:pb-[130px] overflow-hidden"
       style={{
         background: `
           radial-gradient(ellipse 800px 500px at 90% 20%, rgba(92,13,26,0.06) 0%, transparent 60%),

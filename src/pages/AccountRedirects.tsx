@@ -73,7 +73,7 @@ const AccountRedirect: React.FC<AccountRedirectProps> = ({ target }) => {
     return (
       <Layout>
         <div 
-          className="min-h-[60vh] py-20 bg-[#fdf8f2]"
+          className="min-h-[60vh] pt-0 pb-20 bg-[#fdf8f2]"
           style={{
             background: `
               radial-gradient(ellipse 800px 500px at 90% 20%, rgba(92,13,26,0.04) 0%, transparent 60%),

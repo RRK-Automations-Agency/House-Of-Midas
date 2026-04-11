@@ -125,7 +125,7 @@ const Wishlist: React.FC = () => {
         canonicalUrl={typeof window !== 'undefined' ? `${window.location.origin}/wishlist` : '/wishlist'}
       />
       <div 
-        className="min-h-[80vh] py-20 px-6 md:px-12"
+        className="min-h-[80vh] pt-6 pb-20 px-6 md:px-12"
         style={{
           background: `
             radial-gradient(ellipse 800px 500px at 90% 20%, rgba(92,13,26,0.04) 0%, transparent 60%),
@@ -141,9 +141,9 @@ const Wishlist: React.FC = () => {
               <motion.div
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
-                className="flex items-center gap-3 text-[10px] uppercase tracking-[0.4em] text-[#d4a843]"
+                className="flex items-center gap-3 text-[10px] uppercase tracking-[0.4em] text-[#6B5820]"
               >
-                <div className="w-8 h-[1px] bg-[#d4a843]/40" />
+                <div className="w-8 h-[1px] bg-[#6B5820]/40" />
                 Your Treasury
               </motion.div>
               <motion.h1 
