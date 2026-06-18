@@ -123,7 +123,16 @@ const ProductDetails: React.FC = () => {
 
   const media = useMemo<MediaItem[]>(() => {
     if (!product) return [];
-    return (product.media as MediaItem[]) || [];
+    if (Array.isArray(product.media) && product.media.length > 0) {
+      return (product.media as MediaItem[]);
+    }
+    // Fallback if media is empty/undefined but we have a main product image
+    if (product.image) {
+      return [
+        { type: 'image', src: product.image, thumbnail: product.image, alt: product.name }
+      ];
+    }
+    return [];
   }, [product]);
 
   const selectedVariant = useMemo<ProductVariant | null>(() => {
@@ -642,6 +651,9 @@ const ProductDetails: React.FC = () => {
                 <h1 className="font-playfair-display text-[clamp(2rem,3.1vw,2.8rem)] font-bold italic leading-[1.1] text-[#1a0509] mb-3">
                   {product.name}
                 </h1>
+                {product.tags?.includes && product.tags?.includes('custom-made') && (
+                  <span className="inline-block bg-[#f3e8ff] text-[#5b21b6] px-3 py-1 rounded-full text-sm font-semibold ml-3">Custom-made to Order</span>
+                )}
 
                 <div className="flex items-center gap-3 text-[1.45rem] font-jost text-[#1a0509]">
                   <span className="font-semibold">{displayPrice}</span>

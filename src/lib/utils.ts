@@ -39,11 +39,12 @@ export function formatDate(
 }
 
 export function getAssetUrl(path: string) {
-  const isShopify = !!(window as any).ShopifyAssetUrl;
-  if (!isShopify) return path;
-  
-  // Extract filename from path (e.g. "/images/logo.png" -> "logo.png")
-  // Shopify assets are flattened in our build process
+  const isShopify = typeof window !== 'undefined' && !!(window as any).ShopifyAssetUrl;
   const filename = path.split('/').pop() || '';
-  return `${(window as any).ShopifyAssetUrl}${filename}`;
+  if (isShopify) {
+    return `${(window as any).ShopifyAssetUrl}${filename}`;
+  }
+  
+  // Locally, if the file is in assets, we want to load it from /assets/
+  return `/assets/${filename}`;
 }

@@ -2,6 +2,7 @@ import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import svgr from "vite-plugin-svgr";
 import path from "path";
+import fs from "fs";
 
 async function loadOptionalMiaodaPlugin() {
   try {
@@ -31,6 +32,30 @@ export default defineConfig(async () => {
           namedExport: "ReactComponent",
         },
       }),
+      {
+        name: 'serve-assets',
+        configureServer(server) {
+          server.middlewares.use('/assets', async (req, res, next) => {
+            const url = req.url?.split('?')[0] || '';
+            const filePath = path.resolve(__dirname, 'assets', url.replace(/^\//, ''));
+            try {
+              const content = await fs.promises.readFile(filePath);
+              const ext = path.extname(filePath).toLowerCase();
+              const contentType = ext === '.png' ? 'image/png' 
+                : ext === '.jpg' || ext === '.jpeg' ? 'image/jpeg'
+                : ext === '.svg' ? 'image/svg+xml'
+                : ext === '.mp4' ? 'video/mp4'
+                : ext === '.js' ? 'application/javascript'
+                : ext === '.css' ? 'text/css'
+                : 'application/octet-stream';
+              res.setHeader('Content-Type', contentType);
+              res.end(content);
+            } catch (err) {
+              next();
+            }
+          });
+        }
+      },
     ],
     resolve: {
       alias: {

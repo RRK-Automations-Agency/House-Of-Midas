@@ -23,6 +23,7 @@ interface ProductCardProps {
     isHero?: boolean;
     comparePrice?: string;
     metal?: string;
+    tags?: string[];
     options?: ProductOption[];
   };
   enableHoverSwap?: boolean;
@@ -210,6 +211,11 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, enableHoverSwap = fa
 
         {/* Top-aligned Actions */}
         <div className="absolute inset-0 p-3 pointer-events-none z-20">
+          {Array.isArray(product.tags) && product.tags.includes('custom-made') && (
+            <div className="absolute top-3 left-3 z-30 pointer-events-none">
+              <span className="inline-block bg-[#f3e8ff] text-[#5b21b6] px-2 py-1 rounded-full text-[11px] font-semibold">Custom-made</span>
+            </div>
+          )}
           <div className="flex flex-col gap-2.5 items-start pointer-events-auto opacity-0 translate-x-[-10px] transition-all duration-300 group-hover:opacity-100 group-hover:translate-x-0">
             <Link 
               to={`/products/${product.handle}`}

@@ -1,5 +1,8 @@
 <div class="product">
   <h1 class="product__title">{{ product.title | escape }}</h1>
+  {% if product.tags contains 'custom-made' %}
+    <span class="product-badge badge--custom" style="display:inline-block;background:#f3e8ff;color:#5b21b6;padding:4px 8px;border-radius:999px;font-weight:600;font-size:12px;margin-left:8px;">Custom-made to Order</span>
+  {% endif %}
   <div class="product__description rte">
     {{ product.description }}
   </div>

@@ -153,16 +153,32 @@ export async function getShopifyProducts(): Promise<Product[]> {
 
     // 2. Fallback to standard Shopify AJAX API if bridge failed or is empty
     if (!productsData || !Array.isArray(productsData) || productsData.length === 0) {
-      const response = await fetch("/collections/all/products.json?limit=50");
-      if (!response.ok) throw new Error("Failed to fetch products from any source");
-      const data = await response.json();
-      productsData = data.products || [];
+      try {
+        const response = await fetch("/collections/all/products.json?limit=50");
+        if (response.ok) {
+          const data = await response.json();
+          productsData = data.products || [];
+        }
+      } catch (e) {
+        // ignore and fallback to local mock data
+      }
+    }
+    
+    // 3. Fallback to local mock data if productsData is empty or unavailable
+    if (!productsData || !Array.isArray(productsData) || productsData.length === 0) {
+      const { PRODUCTS } = await import("./mock-data");
+      return PRODUCTS;
     }
     
     return productsData.map(mapShopifyProduct);
   } catch (error) {
-    console.error("Error fetching products:", error);
-    return [];
+    console.error("Error fetching products, falling back to mock data:", error);
+    try {
+      const { PRODUCTS } = await import("./mock-data");
+      return PRODUCTS;
+    } catch (e) {
+      return [];
+    }
   }
 }
 
@@ -198,9 +214,19 @@ export async function getProductByHandle(handle: string): Promise<Product | null
       // ignore
     }
 
+    // Try local mock fallback
+    const { PRODUCTS } = await import("./mock-data");
+    const found = PRODUCTS.find((p) => p.handle === handle);
+    if (found) return found;
+
     return null;
   } catch (err) {
     console.warn('Failed to fetch product by handle', handle, err);
+    try {
+      const { PRODUCTS } = await import("./mock-data");
+      const found = PRODUCTS.find((p) => p.handle === handle);
+      if (found) return found;
+    } catch (e) {}
     return null;
   }
 }
@@ -418,6 +444,11 @@ export function formatShopifyPrice(value: any): string {
  */
 function buildShopifySrcSet(src: string): string {
   if (!src) return "";
+  
+  // Disable srcSet generation when running locally (no ShopifyAssetUrl)
+  const isShopify = typeof window !== 'undefined' && !!(window as any).ShopifyAssetUrl;
+  if (!isShopify) return "";
+  
   try {
     // Use URL to preserve origin and query params
     const u = new URL(src, typeof window !== 'undefined' ? window.location.origin : undefined);
