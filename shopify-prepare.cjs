@@ -101,3 +101,12 @@ const flattenDirectory = (dir) => {
 // Run final flattening on the assets dir
 flattenDirectory(ASSETS_DIR);
 console.log('Final asset flattening complete for Shopify compatibility.');
+
+// Copy landing-preloader.html to assets/ for deployment environments
+const PRELOADER_SRC = path.resolve(__dirname, 'landing-preloader.html');
+const PRELOADER_DEST = path.join(ASSETS_DIR, 'landing-preloader.html');
+if (fs.existsSync(PRELOADER_SRC)) {
+  fs.copyFileSync(PRELOADER_SRC, PRELOADER_DEST);
+  console.log('Successfully copied landing-preloader.html to assets/');
+}
+
