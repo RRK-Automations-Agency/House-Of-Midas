@@ -48,6 +48,6 @@ export function getAssetUrl(path: string) {
     return `${(window as any).ShopifyAssetUrl}${filename}`;
   }
   
-  // Locally, if the file is in assets, we want to load it from /assets/
-  return `/assets/${filename}`;
+  // Locally and on Vercel, assets are served from the root of the output directory
+  return `/${filename}`;
 }
