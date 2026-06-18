@@ -91,9 +91,12 @@ export async function getCart(): Promise<ShopifyCart> {
  * @param quantity The quantity to add
  */
 export async function addToCart(id: string | number, quantity: number = 1): Promise<void> {
-  const variantId = Number(id);
-  if (isNaN(variantId)) {
-    throw new Error(`Invalid variant ID: ${id}`);
+  const isShopify = typeof window !== 'undefined' && !!(window as any).ShopifyAssetUrl;
+  if (isShopify) {
+    const variantId = Number(id);
+    if (isNaN(variantId)) {
+      throw new Error(`Invalid variant ID: ${id}`);
+    }
   }
 
   const response = await fetch("/cart/add.js", {

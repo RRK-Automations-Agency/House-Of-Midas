@@ -109,4 +109,3 @@ if (fs.existsSync(PRELOADER_SRC)) {
   fs.copyFileSync(PRELOADER_SRC, PRELOADER_DEST);
   console.log('Successfully copied landing-preloader.html to assets/');
 }
-

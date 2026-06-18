@@ -40,7 +40,10 @@ export function formatDate(
 
 export function getAssetUrl(path: string) {
   const isShopify = typeof window !== 'undefined' && !!(window as any).ShopifyAssetUrl;
-  const filename = path.split('/').pop() || '';
+  let filename = path.split('/').pop() || '';
+  if (path.includes('/images/ring-sequence/')) {
+    filename = `ring-${filename}`;
+  }
   if (isShopify) {
     return `${(window as any).ShopifyAssetUrl}${filename}`;
   }
